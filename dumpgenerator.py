@@ -904,7 +904,7 @@ def percent_cb(complete, total):
 
 def push_zip (file):
     d =datetime.datetime.now()
-    datestring =d.isoformat()
+
     year = d.year
     month= d.month
     block= "wikipedia-delete-%0.4d-%02d" % (year, month)
@@ -923,7 +923,7 @@ import zipfile
 def postprocess(path): # now lets post process  the outpu
     # make a zip file with the path
     d =datetime.datetime.now()
-    datestring =d.isoformat()
+    datestring =d.strftime("%d%m%y%H%M%S")
     zipfilename="wtarchive%s.zip" % datestring
     z = zipfile.ZipFile(zipfilename, "w") 
 
