@@ -915,24 +915,23 @@ def push_zip (file):
         bucket = conn.create_bucket(block)
     k = Key(bucket)
     k.key = file
+    headers = {}
+    headers['x-archive-queue-derive'] = '0'
     k.set_contents_from_filename(file,
-                                 cb=percent_cb, num_cb=10)
+                                 headers=headers,
+                                 cb=percent_cb, 
+                                 num_cb=10)
     print "Uploaded %s" % file
 
-import zipfile 
 def postprocess(path): # now lets post process  the outpu
     # make a zip file with the path
     d =datetime.datetime.now()
     datestring =d.strftime("%d%m%y%H%M%S")
     zipfilename="wtarchive%s.zip" % datestring
-    z = zipfile.ZipFile(zipfilename, "w") 
-
-    for dirname, dirnames, filenames in os.walk(path):
-        for filename in filenames:
-            print os.path.join(dirname, filename)
-            z.write(os.path.join(dirname, filename))
-
+    os.system ("zip %s %s/*" % (zipfilename,path))
+    os.system ("md5sum %s > %s.md5" % (zipfilename,zipfilename))    
     push_zip (zipfilename)
+    push_zip ("%s.md5" % zipfilename)
 
 
 def main(params=[]):
