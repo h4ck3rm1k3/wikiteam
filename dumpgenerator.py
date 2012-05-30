@@ -18,9 +18,9 @@
 # DumpGenerator.py is a script to generate backups of MediaWiki wikis
 # To learn more, read the documentation:
 #        http://code.google.com/p/wikiteam/wiki/NewTutorial
-
-import cPickle
 import datetime
+import cPickle
+
 import getopt
 try:
     from hashlib import md5
@@ -33,6 +33,8 @@ import sys
 import time
 import urllib
 import urllib2
+import os
+
 
 def truncateFilename(other={}, filename=''):
     """  """
@@ -129,46 +131,22 @@ def getNamespacesAPI(config={}):
     print '%d namespaces found' % (len(namespaces))
     return namespaces, namespacenames
 
+import catlib
+import wikipedia as pywikibot
 def getPageTitlesAPI(config={}):
     """ Uses the API to get the list of page titles """
     titles = []
-    namespaces, namespacenames = getNamespacesAPI(config=config)
-    for namespace in namespaces:
-        if namespace in config['exnamespaces']:
-            print '    Skipping namespace =', namespace
-            continue
-        
-        c = 0
-        print '    Retrieving titles in the namespace %d' % (namespace)
-        headers = {'User-Agent': getUserAgent()}
-        apfrom = '!'
-        while apfrom:
-            sys.stderr.write('.') #progress
-            params = {'action': 'query', 'list': 'allpages', 'apnamespace': namespace, 'apfrom': apfrom, 'format': 'xml', 'aplimit': 500}
-            data = urllib.urlencode(params)
-            req = urllib2.Request(url=config['api'], data=data, headers=headers)
-            try:
-                f = urllib2.urlopen(req)
-            except:
-                try:
-                    print 'Server is slow... Waiting some seconds and retrying...'
-                    time.sleep(10)
-                    f = urllib2.urlopen(req)
-                except:
-                    print 'An error has occurred while retrieving page titles with API'
-                    print 'Please, resume the dump, --resume'
-                    sys.exit()
-            xml = f.read()
-            f.close()
-            m = re.findall(r'<allpages apfrom="([^>]+)" />', xml)
-            if m:
-                apfrom = undoHTMLEntities(text=m[0]) #&quot; = ", etc
-            else:
-                apfrom = ''
-            m = re.findall(r'title="([^>]+)" />', xml)
-            titles += [undoHTMLEntities(title) for title in m]
-            c += len(m)
-        print '    %d titles retrieved in the namespace %d' % (c, namespace)
+    site = pywikibot.getSite()
+    for x in ('Candidates_for_speedy_deletion_as_hoaxes',
+              'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
+              'Candidates_for_speedy_deletion_for_unspecified_reason') :
+        cat = catlib.Category(site, x)
+        pages = cat.articlesList(False)
+        print pages
+        for x in pages :
+            print x.urlname()
+            titles +=  [x.urlname()]
+    print titles
     return titles
 
 def getPageTitlesScrapper(config={}):
@@ -740,12 +718,6 @@ def welcome():
     print "#"*73
     print ''
 
-def bye():
-    """  """
-    print "---> Congratulations! Your dump is complete <---"
-    print "If you found any bug, report a new issue here (Google account required): http://code.google.com/p/wikiteam/issues/list"
-    print "If this is a public wiki, please, consider publishing this dump. Do it yourself as explained in http://code.google.com/p/wikiteam/wiki/NewTutorial#Publishing_the_dump or contact us at http://code.google.com/p/wikiteam"
-    print "Good luck! Bye!"
 
 def usage():
     """  """
@@ -922,19 +894,53 @@ def removeIP(raw=''):
     raw = re.sub(r'(?i)[\da-f]{0,4}:[\da-f]{0,4}:[\da-f]{0,4}:[\da-f]{0,4}:[\da-f]{0,4}:[\da-f]{0,4}:[\da-f]{0,4}:[\da-f]{0,4}', '0:0:0:0:0:0:0:0', raw)
     return raw
 
+
+import boto
+from boto.s3.key import Key
+
+def percent_cb(complete, total):
+    sys.stdout.write('.')
+    sys.stdout.flush()
+
+def push_zip (file):
+    d =datetime.datetime.now()
+    datestring =d.isoformat()
+    year = d.year
+    month= d.month
+    block= "wikipedia-delete-%0.4d-%02d" % (year, month)
+    print "going to use %s" % block
+    conn = boto.connect_s3(host='s3.us.archive.org', is_secure=False)
+    bucket = conn.get_bucket(block)
+    if not bucket:
+        bucket = conn.create_bucket(block)
+    k = Key(bucket)
+    k.key = file
+    k.set_contents_from_filename(file,
+                                 cb=percent_cb, num_cb=10)
+    print "Uploaded %s" % file
+
+import zipfile 
+def postprocess(path): # now lets post process  the outpu
+    # make a zip file with the path
+    d =datetime.datetime.now()
+    datestring =d.isoformat()
+    zipfilename="wtarchive%s.zip" % datestring
+    z = zipfile.ZipFile(zipfilename, "w") 
+
+    for dirname, dirnames, filenames in os.walk(path):
+        for filename in filenames:
+            print os.path.join(dirname, filename)
+            z.write(os.path.join(dirname, filename))
+
+    push_zip (zipfilename)
+
+
 def main(params=[]):
     """ Main function """
     welcome()
     configfilename = 'config.txt'
     config, other = getParameters(params=params)
-    
-    #notice about wikipedia dumps
-    if re.findall(r'(wikipedia|wikisource|wiktionary|wikibooks|wikiversity|wikimedia|wikispecies|wikiquote|wikinews)\.org', config['api']+config['index']):
-        print 'DO NOT USE THIS SCRIPT TO DOWNLOAD WIKIMEDIA PROJECTS!\nDownload the dumps from http://dumps.wikimedia.org'
-        if not other['force']:
-            print 'Thanks!'
-            sys.exit()
-    
+        
     print 'Analysing %s' % (config['api'] and config['api'] or config['index'])
     
     #creating path or resuming if desired
@@ -1119,8 +1125,9 @@ def main(params=[]):
         f = open('%s/Special:Version.html' % (config['path']), 'w')
         f.write(raw)
         f.close()
+
+    postprocess(config['path']); # now lets post process  the outpu
     
-    bye()
 
 if __name__ == "__main__":
     main()
