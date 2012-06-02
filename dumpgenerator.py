@@ -137,7 +137,9 @@ def getPageTitlesAPI(config={}):
     """ Uses the API to get the list of page titles """
     titles = []
     site = pywikibot.getSite()
-    for x in ('Candidates_for_speedy_deletion_as_hoaxes',
+    for x in (
+        'Speedy_deletion',
+        'Candidates_for_speedy_deletion_as_hoaxes',
               'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
               'Candidates_for_speedy_deletion_for_unspecified_reason') :
         cat = catlib.Category(site, x)
@@ -747,7 +749,7 @@ def getParameters(params=[]):
         params = sys.argv[1:]
     config = {
         'curonly': False,
-        'date': datetime.datetime.now().strftime('%Y%m%d'),
+        'date': datetime.datetime.now().strftime('%Y%m%d%H%M%S'),
         'api': '',
         'index': '',
         'images': False,
@@ -944,10 +946,11 @@ def main(params=[]):
     
     #creating path or resuming if desired
     c = 2
+#    other['resume'] = False
     originalpath = config['path'] # to avoid concat blabla-2, blabla-2-3, and so on...
     while not other['resume'] and os.path.isdir(config['path']): #do not enter if resume is request from begining
         print '\nWarning!: "%s" path exists' % (config['path'])
-        reply = ''
+        reply = 'y'
         while reply.lower() not in ['yes', 'y', 'no', 'n']:
             reply = raw_input('There is a dump in "%s", probably incomplete.\nIf you choose resume, to avoid conflicts, the parameters you have chosen in the current session will be ignored\nand the parameters available in "%s/%s" will be loaded.\nDo you want to resume ([yes, y], [no, n])? ' % (config['path'], config['path'], configfilename))
         if reply.lower() in ['yes', 'y']:

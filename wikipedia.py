@@ -4974,6 +4974,7 @@ class Site(object):
         @type user: str
 
         """
+        print "check %s" % code 
         self.__code = code.lower()
         if isinstance(fam, basestring) or fam is None:
             self.__family = Family(fam, fatal = False)
@@ -4989,6 +4990,7 @@ class Site(object):
                 raise NoSuchSite("Language %s in family %s is obsolete"
                                  % (self.__code, self.__family.name))
         if self.__code not in self.languages():
+            print self.languages()
             if self.__code == 'zh-classic' \
                and 'zh-classical' in self.languages():
                 self.__code = 'zh-classical'
@@ -7716,10 +7718,12 @@ _namespaceCache = {}
 
 @deprecate_arg("persistent_http", None)
 def getSite(code=None, fam=None, user=None, noLogin=False):
+    print "code123 %s" % code
     if code is None:
         code = default_code
     if fam is None:
         fam = default_family
+    print "code123 %s" % code
     key = '%s:%s:%s' % (fam, code, user)
     if key not in _sites:
         _sites[key] = Site(code=code, fam=fam, user=user)
@@ -7938,7 +7942,7 @@ if unicode_error:
     print u'unicode test: triggers problem #3081100'
 
 default_family = config.family
-default_code = config.mylang
+default_code = "en"
 logfile = None
 # Check
 
