@@ -553,7 +553,7 @@ not supported by PyWikipediaBot!"""
     def urlname(self, withNamespace=True):
         """Return the Page title encoded for use in an URL."""
         title = self.title(withNamespace=withNamespace, underscore=True)
-        encodedTitle = title.encode(self.site().encoding())
+        encodedTitle = title.encode(self.site().encoding(), "ignore")
         return urllib.quote(encodedTitle)
 
     def __str__(self):

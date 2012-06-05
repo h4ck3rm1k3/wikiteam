@@ -137,8 +137,9 @@ def getPageTitlesAPI(config={}):
     """ Uses the API to get the list of page titles """
     titles = []
     site = pywikibot.getSite()
+#        'Speedy_deletion',
     for x in (
-        'Speedy_deletion',
+
         'Candidates_for_speedy_deletion_as_hoaxes',
               'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
               'Candidates_for_speedy_deletion_for_unspecified_reason') :
