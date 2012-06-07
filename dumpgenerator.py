@@ -132,24 +132,42 @@ def getNamespacesAPI(config={}):
     return namespaces, namespacenames
 
 import catlib
+import re
 import wikipedia as pywikibot
 def getPageTitlesAPI(config={}):
     """ Uses the API to get the list of page titles """
     titles = []
     site = pywikibot.getSite()
 #        'Speedy_deletion',
-    for x in (
-
-        'Candidates_for_speedy_deletion_as_hoaxes',
-              'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
-              'Candidates_for_speedy_deletion_for_unspecified_reason') :
+    for x in (        
+         "Proposed_deletion",
+         "Expired_proposed_deletions",
+         'Candidates_for_speedy_deletion_as_hoaxes',
+         'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
+         'Candidates_for_speedy_deletion_for_unspecified_reason') :
         cat = catlib.Category(site, x)
         pages = cat.articlesList(False)
         print pages
         for x in pages :
             print x.urlname()
             titles +=  [x.urlname()]
+
+    for x in (
+        'AfD_debates',
+        ) :
+        cat = catlib.Category(site, x)
+        pages = cat.articlesList(False)
+        print pages
+        for x in pages :           
+            n = x.urlname()
+            print "before %s" %n
+            n = re.sub('Wikipedia.Articles_for_deletion','',n)
+            n = re.sub('Wikipedia%3AArticles_for_deletion/','',n)
+            print n
+            titles +=  [n]
+
     print titles
+    exit
     return titles
 
 def getPageTitlesScrapper(config={}):
