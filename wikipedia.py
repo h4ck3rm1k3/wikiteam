@@ -7718,12 +7718,12 @@ _namespaceCache = {}
 
 @deprecate_arg("persistent_http", None)
 def getSite(code=None, fam=None, user=None, noLogin=False):
-    print "code123 %s" % code
+#    print "code123 %s" % code
     if code is None:
         code = default_code
     if fam is None:
         fam = default_family
-    print "code123 %s" % code
+#    print "code123 %s" % code
     key = '%s:%s:%s' % (fam, code, user)
     if key not in _sites:
         _sites[key] = Site(code=code, fam=fam, user=user)

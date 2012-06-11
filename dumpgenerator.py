@@ -34,6 +34,8 @@ import time
 import urllib
 import urllib2
 import os
+from shove import Shove
+file_store = Shove('file://mystore')
 
 
 def truncateFilename(other={}, filename=''):
@@ -150,7 +152,17 @@ def getPageTitlesAPI(config={}):
         print pages
         for x in pages :
             print x.urlname()
-            titles +=  [x.urlname()]
+            n = x.urlname()
+            try :
+                if (file_store[n] ) :
+                    print "Skipping %s" % n
+                    skipped = skipped +1
+                else:
+                    titles +=  [n]
+            except:
+                titles +=  [n]
+
+#            titles +=  []
 
     for x in (
         'AfD_debates',
@@ -163,10 +175,20 @@ def getPageTitlesAPI(config={}):
             print "before %s" %n
             n = re.sub('Wikipedia.Articles_for_deletion','',n)
             n = re.sub('Wikipedia%3AArticles_for_deletion/','',n)
-            print n
-            titles +=  [n]
+            print n            
+            skipped = 0
+            try :
+                if (file_store[n] ) :
+                    skipped = skipped +1
+                    print "Skipping %s" % n
+                else:
+                    titles +=  [n]
+            except:
+                titles +=  [n]
+
 
     print titles
+
     exit
     return titles
 
@@ -448,7 +470,8 @@ def generateXMLDump(config={}, titles=[], start=''):
         xml = getXMLPage(config=config, title=title)
         xml = cleanXML(xml=xml)
         if not xml:
-            logerror(config=config, text='The page "%s" was missing in the wiki (probably deleted)' % (title))
+            print 'The page "%s" was missing in the wiki (probably deleted)' % (title)
+            break
         #here, XML is a correct <page> </page> chunk or 
         #an empty string due to a deleted page (logged in errors log) or
         #an empty string due to an error while retrieving the page from server (logged in errors log)
@@ -457,6 +480,10 @@ def generateXMLDump(config={}, titles=[], start=''):
     xmlfile.write(footer)
     xmlfile.close()
     print 'XML dump saved at...', xmlfilename
+
+    for title in titles:
+        file_store[title] = xmlfilename
+
 
 def saveTitles(config={}, titles=[]):
     """  """
