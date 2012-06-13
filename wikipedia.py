@@ -279,6 +279,9 @@ class Page(object):
             # Clean up the name, it can come from anywhere.
             # Convert HTML entities to unicode
             t = html2unicode(title)
+            if not t:
+                print u"Invalid title3 '%s'" % title 
+                raise InvalidTitle(u"Invalid title '%s'" % title )
 
             # Convert URL-encoded characters to unicode
             # Sometimes users copy the link to a site from one to another.
@@ -286,7 +289,14 @@ class Page(object):
             try:
                 t = url2unicode(t, site=insite, site2=site)
             except UnicodeDecodeError:
-                raise InvalidTitle(u'Bad page title : %s' % t)
+                print u'Bad page title : %s' % t
+                return 
+                raise InvalidTitle(u'Bad page title2 : %s' % t)
+
+            if not t:
+                print u"Invalid title1 '%s'" % title 
+                raise InvalidTitle(u"Invalid title '%s'" % title )
+
 
             # Normalize unicode string to a NFC (composed) format to allow
             # proper string comparisons. According to
@@ -294,6 +304,10 @@ class Page(object):
             # the mediawiki code normalizes everything to NFC, not NFKC
             # (which might result in information loss).
             t = unicodedata.normalize('NFC', t)
+            if not t:
+                print u"Invalid title1 '%s'" % title 
+                raise InvalidTitle(u"Invalid title '%s'" % title )
+
 
             if u'\ufffd' in t:
                 raise InvalidTitle("Title contains illegal char (\\uFFFD)")
@@ -314,6 +328,7 @@ class Page(object):
                 self._namespace = defaultNamespace
 
             if not t:
+                print u"Invalid title '%s'" % title 
                 raise InvalidTitle(u"Invalid title '%s'" % title )
 
             self._namespace = defaultNamespace
@@ -4645,21 +4660,40 @@ def url2unicode(title, site, site2 = None):
 
     """
     # create a list of all possible encodings for both hint sites
-    encList = [site.encoding()] + list(site.encodings())
-    if site2 and site2 <> site:
-        encList.append(site2.encoding())
-        encList += list(site2.encodings())
+#    encList = [""] + list(site.encodings())
+#    if site2 and site2 <> site:
+#        encList.append(site2.encoding())
+#        encList += list(site2.encodings())
     firstException = None
     # try to handle all encodings (will probably retry utf-8)
-    for enc in encList:
-        try:
-            t = title.encode(enc)
-            t = urllib.unquote(t)
-            return unicode(t, enc)
-        except UnicodeError, ex:
-            if not firstException:
-                firstException = ex
-            pass
+
+#
+
+    try:
+        t = title.encode('utf-8')
+    except UnicodeError, ex:
+        print "test error %s %s" % (t,ex)
+        if not firstException:
+            firstException = ex
+        pass
+
+#
+    try:
+        t = urllib.unquote(t)
+    except UnicodeError, ex:
+        print "test2 error %s %s" % (t,ex)
+        if not firstException:
+            firstException = ex
+        pass
+
+#
+    try:
+        return unicode(t, 'utf-8')
+    except UnicodeError, ex:
+        print "test3 error %s %s" % (t,ex)
+        if not firstException:
+            firstException = ex
+        pass
     # Couldn't convert, raise the original exception
     raise firstException
 
@@ -4747,8 +4781,18 @@ def html2unicode(text, ignore = []):
                 result += text[match.start():match.end()]
             i = match.end()
         else:
-            result += text
-            found = False
+#            try:
+ #               text = text.encode('utf-8', 'replace')
+#                text = text.encode('ascii', 'ignore')
+#                result += unicode( text,'utf-8', 'ignore')
+#                result += unicode( text,errors='ignore')
+                result += text
+                found = False
+#            except:
+#                print 'problem with string2 %s' % text
+#                print ex
+#                found = False
+
     return result
 
 # Warning! _familyCache does not necessarily have to be consistent between

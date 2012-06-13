@@ -153,8 +153,9 @@ def getPageTitlesAPI(config={}):
         for x in pages :
             print x.urlname()
             n = x.urlname()
+            an = n.encode("ascii","ignore")
             try :
-                if (file_store[n] ) :
+                if (file_store[an] ) :
                     print "Skipping %s" % n
                     skipped = skipped +1
                 else:
@@ -172,13 +173,25 @@ def getPageTitlesAPI(config={}):
         print pages
         for x in pages :           
             n = x.urlname()
+            an = n.encode("ascii","ignore")
+            try :
+            
+                if (file_store[an] ) :
+                    skipped = skipped +1
+                    print "Skipping %s" % n
+                else:
+                    titles +=  [n]
+            except:
+                titles +=  [n]
+
             print "before %s" %n
             n = re.sub('Wikipedia.Articles_for_deletion','',n)
             n = re.sub('Wikipedia%3AArticles_for_deletion/','',n)
             print n            
+            an = n.encode("ascii","ignore")
             skipped = 0
             try :
-                if (file_store[n] ) :
+                if (file_store[an] ) :
                     skipped = skipped +1
                     print "Skipping %s" % n
                 else:
@@ -364,15 +377,15 @@ def getXMLPage(config={}, title='', verbose=True):
     #do not convert & into %26, title_ = re.sub('&', '%26', title_)
     headers = {'User-Agent': getUserAgent()}
     params = {'title': 'Special:Export', 'pages': title_, 'action': 'submit', }
-    if config['curonly']:
-        params['curonly'] = 1
-        params['limit'] = 1
-    else:
-        params['offset'] = '1' # 1 always < 2000s
-        params['limit'] = limit
-        params['curonly'] = 0 # we need this to be defined, in getXMLPageCore
-    if config.has_key('templates') and config['templates']: #in other case, do not set params['templates']
-        params['templates'] = 1
+#    if config['curonly']:
+ #       params['curonly'] = 1
+ #       params['limit'] = 1
+ #   else:
+    params['offset'] = '1' # 1 always < 2000s
+    params['limit'] = limit
+    params['curonly'] = 0 # we need this to be defined, in getXMLPageCore
+   # if config.has_key('templates') and config['templates']: #in other case, do not set params['templates']
+    params['templates'] = 1
     
     xml = getXMLPageCore(headers=headers, params=params, config=config)
 
@@ -471,7 +484,7 @@ def generateXMLDump(config={}, titles=[], start=''):
         xml = cleanXML(xml=xml)
         if not xml:
             print 'The page "%s" was missing in the wiki (probably deleted)' % (title)
-            break
+            #break
         #here, XML is a correct <page> </page> chunk or 
         #an empty string due to a deleted page (logged in errors log) or
         #an empty string due to an error while retrieving the page from server (logged in errors log)
@@ -482,7 +495,8 @@ def generateXMLDump(config={}, titles=[], start=''):
     print 'XML dump saved at...', xmlfilename
 
     for title in titles:
-        file_store[title] = xmlfilename
+        an = title.encode("ascii","ignore")
+        file_store[an] = xmlfilename
 
 
 def saveTitles(config={}, titles=[]):
