@@ -3,5 +3,5 @@ cd /home/mdupont/experiments/wikipedia/wikiteamgit/data
 python /home/mdupont/experiments/wikipedia/wikiteamgit/dumpgenerator.py   --api=http://en.wikipedia.org/w/api.php --xml
 
 # now upload the wikia
-#cd /home/mdupont/experiments/wikipedia/pywikipediabot/
-#python process.py
+cd /home/mdupont/experiments/wikipedia/pywikipediabot/
+python process.py
