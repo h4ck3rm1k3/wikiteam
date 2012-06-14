@@ -1,7 +1,7 @@
-export PYTHONPATH=/home/mdupont/experiments/wikipedia/wikiteamgit/
-cd /home/mdupont/experiments/wikipedia/wikiteamgit/data
-python /home/mdupont/experiments/wikipedia/wikiteamgit/dumpgenerator.py   --api=http://en.wikipedia.org/w/api.php --xml
+export PYTHONPATH=$HOME/experiments/wikiteam/
+cd ${HOME}/experiments/wikiteam/data
+python $HOME/experiments/wikiteam/dumpgenerator.py   --api=http://en.wikipedia.org/w/api.php --xml
 
 # now upload the wikia
-cd /home/mdupont/experiments/wikipedia/pywikipediabot/
+cd $HOME/experiments/pywikipediabot/
 python process.py
