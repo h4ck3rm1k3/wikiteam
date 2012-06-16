@@ -7773,10 +7773,10 @@ def getSite(code=None, fam=None, user=None, noLogin=False):
         _sites[key] = Site(code=code, fam=fam, user=user)
     ret =  _sites[key]
 
-    print "goint to use key %s" % key
+#    print "goint to use key %s" % key
 
     if not ret.family.isPublic(code) and not noLogin:
-        print "goint to login to %s" % ret.family 
+ #       print "goint to login to %s" % ret.family 
         ret.forceLogin()
     return ret
 
