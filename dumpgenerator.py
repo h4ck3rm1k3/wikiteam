@@ -21,6 +21,9 @@
 import datetime
 import cPickle
 
+import boto
+from boto.s3.key import Key
+
 import getopt
 try:
     from hashlib import md5
@@ -810,11 +813,11 @@ def getParameters(params=[]):
     config = {
         'curonly': False,
         'date': datetime.datetime.now().strftime('%Y%m%d%H%M%S'),
-        'api': '',
+        'api': "http://en.wikipedia.org/w/api.php",
         'index': '',
         'images': False,
         'logs': False,
-        'xml': False,
+        'xml': True,
         'namespaces': ['all'],
         'exnamespaces': [],
         'path': '',
@@ -957,9 +960,6 @@ def removeIP(raw=''):
     return raw
 
 
-import boto
-from boto.s3.key import Key
-
 def percent_cb(complete, total):
     sys.stdout.write('.')
     sys.stdout.flush()
@@ -992,8 +992,9 @@ def postprocess(path): # now lets post process  the outpu
     zipfilename="wtarchive%s.zip" % datestring
     os.system ("zip %s %s/*" % (zipfilename,path))
     os.system ("md5sum %s > %s.md5" % (zipfilename,zipfilename))    
-    push_zip (zipfilename)
-    push_zip ("%s.md5" % zipfilename)
+    if (0) :
+        push_zip (zipfilename)
+        push_zip ("%s.md5" % zipfilename)
 
 
 def main(params=[]):

@@ -144,7 +144,7 @@ from pywikibot import *
 # Set the locale to system default. This will ensure correct string
 # handling for non-latin characters on Python 2.3.x. For Python 2.4.x it's no
 # longer needed.
-locale.setlocale(locale.LC_ALL, '')
+#locale.setlocale(locale.LC_ALL, '')
 
 import config, login, query, version
 
@@ -7772,7 +7772,11 @@ def getSite(code=None, fam=None, user=None, noLogin=False):
     if key not in _sites:
         _sites[key] = Site(code=code, fam=fam, user=user)
     ret =  _sites[key]
+
+    print "goint to use key %s" % key
+
     if not ret.family.isPublic(code) and not noLogin:
+        print "goint to login to %s" % ret.family 
         ret.forceLogin()
     return ret
 
