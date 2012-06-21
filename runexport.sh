@@ -7,3 +7,4 @@ cd ${HOME}/experiments/wikiteam/data
 #pwd
 python $HOME/experiments/wikiteam/process.py
 
+rm -rf  ${HOME}/experiments/wikiteam/data/wt*
