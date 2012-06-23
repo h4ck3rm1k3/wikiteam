@@ -20,13 +20,7 @@
 #        http://code.google.com/p/wikiteam/wiki/NewTutorial
 import datetime
 import cPickle
-import urllib
-import urlparse
-import boto
-from boto.s3.key import Key
-import catlib
-import re
-import wikipedia as pywikibot
+
 import getopt
 try:
     from hashlib import md5
@@ -40,30 +34,8 @@ import time
 import urllib
 import urllib2
 import os
-from shove import Shove
-file_store = Shove('file://mystore')
 
-def saveName(title):
-#    an = title.encode("ascii","ignore")
-    print "storing %s" % title
-    file_store[title] = title
 
-def isNewTitle(name):
-    name = urllib.unquote(name)
-    print "checking %s" % name
-
-    try :
-        if (file_store[name] ) :
-            print "Skipping %s" % name
-            return 0
-        else:
-            return 1
-    except KeyError :
-        print "not seen %s" % name 
-        return 1
-#    except:
-#       print "other except"
-#        return 1
 
 
 def truncateFilename(other={}, filename=''):
@@ -129,50 +101,65 @@ def getNamespaces(config={}):
     namespaces = [i for i in set(namespaces)] #uniques
     print '%d namespaces found' % (len(namespaces))
     return namespaces, namespacenames
-  
+    
+def getNamespacesAPI(config={}):
+    """ Uses the API to get the list of namespaces names and ids """
+    namespaces = config['namespaces']
+    namespacenames = {0:''} # main is 0, no prefix
+    if namespaces:
+        req = urllib2.Request(url=config['api'], data=urllib.urlencode({'action': 'query', 'meta': 'siteinfo', 'siprop': 'namespaces', 'format': 'xml'}), headers={'User-Agent': getUserAgent()})
+        f = urllib2.urlopen(req)
+        raw = f.read()
+        f.close()
+            
+        m = re.compile(r'<ns id="(?P<namespaceid>\d+)"[^>]*?/?>(?P<namespacename>[^<]+)?(</ns>)?').finditer(raw) # [^>]*? to include case="first-letter" canonical= etc.
+        if 'all' in namespaces:
+            namespaces = []
+            for i in m:
+                namespaces.append(int(i.group("namespaceid")))
+                namespacenames[int(i.group("namespaceid"))] = i.group("namespacename")
+        else:
+            #check if those namespaces really exist in this wiki
+            namespaces2 = []
+            for i in m:
+                if int(i.group("namespaceid")) in namespaces:
+                    namespaces2.append(int(i.group("namespaceid")))
+                    namespacenames[int(i.group("namespaceid"))] = i.group("namespacename")
+            namespaces = namespaces2
+    else:
+        namespaces = [0]
+    
+    namespaces = [i for i in set(namespaces)] #uniques
+    print '%d namespaces found' % (len(namespaces))
+    return namespaces, namespacenames
 
-def getSDTitles(site):
+import catlib
+import re
+import wikipedia as pywikibot
+def getPageTitlesAPI(config={}):
+    """ Uses the API to get the list of page titles """
     titles = []
-    for x in (        
-         "Proposed_deletion",
-         "Expired_proposed_deletions",
-         'Candidates_for_speedy_deletion_as_hoaxes',
-         'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
-         'Candidates_for_speedy_deletion_for_unspecified_reason') :
-        cat = catlib.Category(site, x)
-        pages = cat.articlesList(False)
-        print pages
-        for x in pages :
-            print x.urlname()
-            n = x.urlname()
-            an = n.encode("ascii","ignore")
-            if (isNewTitle(an)):
-                titles +=  [n]
+    site = pywikibot.getSite()
 
-    return titles
-
-def getAfd(site):
-    titles = []
     for x in (
-        'AfD_debates',
+        'Category:Template_documentation_pages',
         ) :
         cat = catlib.Category(site, x)
         pages = cat.articlesList(False)
         print pages
         for x in pages :           
             n = x.urlname()
-            an = n.encode("ascii","ignore")
-            if isNewTitle(an):
-                    titles +=  [n]
+#            print "before %s" %n
+#            print "adding %s" % n
+            titles +=  [n]
+            n = re.sub('/doc','',n)
+            skipped = 0
+#            print "adding %s" % n
+            titles +=  [n]
 
-    return titles
+#    print titles
 
-def getPageTitlesAPI(config={}):
-    """ Uses the API to get the list of page titles """
-    titles = []
-    site = pywikibot.getSite()
-    titles += getAfd(site)
-    titles += getSDTitles(site)
+#    exit
     return titles
 
 def getPageTitlesScrapper(config={}):
@@ -342,25 +329,19 @@ def getXMLPage(config={}, title='', verbose=True):
     
     limit = 1000
     truncated = False
-    title_ = title    
+    title_ = title
     title_ = re.sub(' ', '_', title_)
-    title_ = urllib.unquote(title_)
-    print "after check %s" % title_
-
-#    title_ = re.sub('%3A', ':', title_)
-
     #do not convert & into %26, title_ = re.sub('&', '%26', title_)
     headers = {'User-Agent': getUserAgent()}
     params = {'title': 'Special:Export', 'pages': title_, 'action': 'submit', }
-#    if config['curonly']:
- #       params['curonly'] = 1
- #       params['limit'] = 1
- #   else:
-    params['offset'] = '1' # 1 always < 2000s
-    params['limit'] = limit
-    params['curonly'] = 0 # we need this to be defined, in getXMLPageCore
-   # if config.has_key('templates') and config['templates']: #in other case, do not set params['templates']
-    params['templates'] = 1
+    if config['curonly']:
+        params['curonly'] = 1
+        params['limit'] = 1
+    else:
+        params['offset'] = '1' # 1 always < 2000s
+        params['limit'] = limit
+        params['curonly'] = 0 # we need this to be defined, in getXMLPageCore
+        params['templates'] = 1
     
     xml = getXMLPageCore(headers=headers, params=params, config=config)
 
@@ -375,7 +356,7 @@ def getXMLPage(config={}, title='', verbose=True):
             if re.findall(r_timestamp, xml2): #are there more edits in this next XML chunk or no <page></page>?
                 if re.findall(r_timestamp, xml2)[-1] == params['offset']:
                     #again the same XML, this wiki does not support params in Special:Export, offer complete XML up to X edits (usually 1000)
-#                    print 'ATTENTION: This wiki does not allow some parameters in Special:Export, therefore pages with large histories may be truncated'
+                    print 'ATTENTION: This wiki does not allow some parameters in Special:Export, therefore pages with large histories may be truncated'
                     truncated = True
                     break
                 else:
@@ -400,26 +381,6 @@ def getXMLPage(config={}, title='', verbose=True):
     
     return xml
 
-
-def parseAfdName(title):
-    ret=0
-    # now, let check if this is an Afd, and extract the page name
-    if re.search('Wikipedia.Articles.for.deletion', title):
-        ret=1
-    if re.search('Wikipedia%3AArticles_for_deletion/',title):
-        ret =1
-    return ret
-
-
-def parseAfd(xml):
-    # now, let check if this is an Afd, and extract the page name
-    m = re.search('===\[\[(.+)\]\]===', xml)
-    if (m):
-        name=m.group(1)
-        print "found new page %s" % name
-        return name
-    return 0
-
 def cleanXML(xml=''):
     """  """
     #do not touch xml codification, as is
@@ -431,9 +392,10 @@ def cleanXML(xml=''):
 def generateXMLDump(config={}, titles=[], start=''):
     """  """
     print 'Retrieving the XML for every page from "%s"' % (start and start or 'start')
+
     header = getXMLHeader(config=config)
     footer = '</mediawiki>\n' #new line at the end
-    xmlfilename = '%s-%s-%s.xml' % (domain2prefix(config=config), config['date'], config['curonly'] and 'current' or 'history')
+    xmlfilename = 'templates2-%s-%s-%s.xml' % (domain2prefix(config=config), config['date'], config['curonly'] and 'current' or 'history')
     xmlfile = ''
     lock = True
     if start:
@@ -448,6 +410,7 @@ def generateXMLDump(config={}, titles=[], start=''):
                 if not re.search(r'<title>%s</title>' % (start), l): 
                     xmlfile2.write(prev)
                 else:
+                    print "missing title in %s" % l
                     break
             c += 1
             prev = l
@@ -465,43 +428,9 @@ def generateXMLDump(config={}, titles=[], start=''):
     
     xmlfile = open('%s/%s' % (config['path'], xmlfilename), 'a')
     c = 1
-    titles2 = []
+    
     for title in titles:
-        if not(isNewTitle(title)):
-            print 'seen %s ' % title
-            continue
-
-        if not title.strip():
-            continue
-        if title == start: #start downloading from start, included
-            lock = False
-        if lock:
-            continue
-        delay(config=config)
-        if c % 10 == 0:
-            print 'Downloaded %d pages' % (c)
-        xml = getXMLPage(config=config, title=title)
-        xml = cleanXML(xml=xml)
-        if not xml:
-            print 'The page "%s" was missing in the wiki (probably deleted)' % (title)
-
-        # now look for afd
-        if (parseAfdName(title)):
-            afd=parseAfd(xml)
-            if (afd):
-                titles2 += [afd] 
-        #here, XML is a correct <page> </page> chunk or 
-        #an empty string due to a deleted page (logged in errors log) or
-        #an empty string due to an error while retrieving the page from server (logged in errors log)
-        xmlfile.write(xml)
-
-        c += 1
-
-    # now we add in the articles for deletion
-    for title in titles2:
-        if not(isNewTitle(title)):
-            print 'seen %s ' % title
-            continue
+        print 'checking %s' % title
 
         if not title.strip():
             continue
@@ -521,18 +450,13 @@ def generateXMLDump(config={}, titles=[], start=''):
         #an empty string due to a deleted page (logged in errors log) or
         #an empty string due to an error while retrieving the page from server (logged in errors log)
         xmlfile.write(xml)
-
         c += 1
-        
     xmlfile.write(footer)
     xmlfile.close()
     print 'XML dump saved at...', xmlfilename
 
-    for title in titles:
-        saveName(title)
 
-    for title in titles2:
-        saveName(title)
+
 
 
 def saveTitles(config={}, titles=[]):
@@ -540,15 +464,150 @@ def saveTitles(config={}, titles=[]):
     #save titles in a txt for resume if needed
     titlesfilename = '%s-%s-titles.txt' % (domain2prefix(config=config), config['date'])
     titlesfile = open('%s/%s' % (config['path'], titlesfilename), 'w')
-    t='\n'.join(titles)
-    t = t.encode("ascii","ignore")
-    titlesfile.write('\n')
-    titlesfile.write(t)
+    titlesfile.write('\n'.join(titles))
     titlesfile.write('\n--END--')
     titlesfile.close()
     print 'Titles saved at...', titlesfilename
 
+def saveImageFilenamesURL(config={}, images=[]):
+    """  """
+    #save list of images and their urls
+    imagesfilename = '%s-%s-images.txt' % (domain2prefix(config=config), config['date'])
+    imagesfile = open('%s/%s' % (config['path'], imagesfilename), 'w')
+    imagesfile.write('\n'.join(['%s\t%s\t%s' % (filename, url, uploader) for filename, url, uploader in images]))
+    imagesfile.write('\n--END--')
+    imagesfile.close()
+    print 'Image filenames and URLs saved at...', imagesfilename
 
+def getImageFilenamesURL(config={}):
+    """ Retrieve file list: filename, url, uploader """
+    print 'Retrieving image filenames'
+    r_next = r'(?<!&amp;dir=prev)&amp;offset=(?P<offset>\d+)&amp;' # (?<! http://docs.python.org/library/re.html
+    images = []
+    offset = '29990101000000' #january 1, 2999
+    limit = 5000
+    retries = 5
+    while offset:
+        #5000 overload some servers, but it is needed for sites like this with no next links http://www.memoryarchive.org/en/index.php?title=Special:Imagelist&sort=byname&limit=50&wpIlMatch=
+        req = urllib2.Request(url=config['index'], data=urllib.urlencode({'title': 'Special:Imagelist', 'limit': limit, 'offset': offset, }), headers={'User-Agent': getUserAgent()})
+        f = urllib2.urlopen(req)
+        raw = f.read()
+        f.close()
+        if re.search(ur'(?i)(allowed memory size of \d+ bytes exhausted|Call to a member function getURL)', raw): # delicate wiki
+            if limit > 10:
+                print 'Error: listing %d images in a chunk is not possible, trying tiny chunks' % (limit)
+                limit = limit/10
+                continue
+            elif retries > 0: # waste retries, then exit
+                retries -= 1
+                print 'Retrying...'
+                continue
+            else:
+                print 'No more retries, exit...'
+                break
+        
+        raw = cleanHTML(raw)
+        #archiveteam 1.15.1 <td class="TablePager_col_img_name"><a href="/index.php?title=File:Yahoovideo.jpg" title="File:Yahoovideo.jpg">Yahoovideo.jpg</a> (<a href="/images/2/2b/Yahoovideo.jpg">file</a>)</td>
+        #wikanda 1.15.5 <td class="TablePager_col_img_user_text"><a href="/w/index.php?title=Usuario:Fernandocg&amp;action=edit&amp;redlink=1" class="new" title="Usuario:Fernandocg (página no existe)">Fernandocg</a></td>
+        r_images1 = r'(?im)<td class="TablePager_col_img_name"><a href[^>]+title="[^:>]+:(?P<filename>[^>]+)">[^<]+</a>[^<]+<a href="(?P<url>[^>]+/[^>/]+)">[^<]+</a>[^<]+</td>\s*<td class="TablePager_col_img_user_text"><a[^>]+>(?P<uploader>[^<]+)</a></td>'
+        #wikijuegos 1.9.5 http://softwarelibre.uca.es/wikijuegos/Especial:Imagelist old mediawiki version
+        r_images2 = r'(?im)<td class="TablePager_col_links"><a href[^>]+title="[^:>]+:(?P<filename>[^>]+)">[^<]+</a>[^<]+<a href="(?P<url>[^>]+/[^>/]+)">[^<]+</a></td>\s*<td class="TablePager_col_img_timestamp">[^<]+</td>\s*<td class="TablePager_col_img_name">[^<]+</td>\s*<td class="TablePager_col_img_user_text"><a[^>]+>(?P<uploader>[^<]+)</a></td>'
+        #gentoowiki 1.18 <tr><td class="TablePager_col_img_timestamp">18:15, 3 April 2011</td><td class="TablePager_col_img_name"><a href="/wiki/File:Asus_eeepc-1201nl.png" title="File:Asus eeepc-1201nl.png">Asus eeepc-1201nl.png</a> (<a href="/w/images/2/2b/Asus_eeepc-1201nl.png">file</a>)</td><td class="TablePager_col_thumb"><a href="/wiki/File:Asus_eeepc-1201nl.png" class="image"><img alt="" src="/w/images/thumb/2/2b/Asus_eeepc-1201nl.png/180px-Asus_eeepc-1201nl.png" width="180" height="225" /></a></td><td class="TablePager_col_img_size">37 KB</td><td class="TablePager_col_img_user_text"><a href="/w/index.php?title=User:Yannails&amp;action=edit&amp;redlink=1" class="new" title="User:Yannails (page does not exist)">Yannails</a></td><td class="TablePager_col_img_description">&#160;</td><td class="TablePager_col_count">1</td></tr>
+        r_images3 = r'(?im)<td class="TablePager_col_img_name"><a[^>]+title="[^:>]+:(?P<filename>[^>]+)">[^<]+</a>[^<]+<a href="(?P<url>[^>]+)">[^<]+</a>[^<]+</td><td class="TablePager_col_thumb"><a[^>]+><img[^>]+></a></td><td class="TablePager_col_img_size">[^<]+</td><td class="TablePager_col_img_user_text"><a[^>]+>(?P<uploader>[^<]+)</a></td>'
+        #http://www.memoryarchive.org/en/index.php?title=Special:Imagelist&sort=byname&limit=50&wpIlMatch=
+        #(<a href="/en/Image:109_0923.JPG" title="Image:109 0923.JPG">desc</a>) <a href="/en/upload/c/cd/109_0923.JPG">109 0923.JPG</a> . . 885,713 bytes . . <a href="/en/User:Bfalconer" title="User:Bfalconer">Bfalconer</a> . . 18:44, 17 November 2005<br />
+        r_images4 = r'(?im)<a href=[^>]+ title="[^:>]+:(?P<filename>[^>]+)">[^<]+</a>[^<]+<a href="(?P<url>[^>]+)">[^<]+</a>[^<]+<a[^>]+>(?P<uploader>[^<]+)</a>'
+        m = []
+        #different mediawiki versions
+        if re.search(r_images1, raw):
+            m = re.compile(r_images1).finditer(raw)
+        elif re.search(r_images2, raw):
+            m = re.compile(r_images2).finditer(raw)
+        elif re.search(r_images3, raw):
+            m = re.compile(r_images3).finditer(raw)
+        elif re.search(r_images4, raw):
+            m = re.compile(r_images4).finditer(raw)
+        
+        for i in m:
+            url = i.group('url')
+            if url[0] == '/' or (not url.startswith('http://') and not url.startswith('https://')): #is it a relative URL?
+                if url[0] == '/': #slash is added later
+                    url = url[1:]
+                domainalone = config['index'].split('://')[1].split('/')[0] #remove from :// (http or https) until the first / after domain
+                url = '%s://%s/%s' % (config['index'].split('://')[0], domainalone, url) # concat http(s) + domain + relative url
+            url = undoHTMLEntities(text=url)
+            #url = urllib.unquote(url) #do not use unquote with url, it break some urls with odd chars
+            url = re.sub(' ', '_', url)
+            filename = re.sub('_', ' ', i.group('filename'))
+            filename = undoHTMLEntities(text=filename)
+            filename = urllib.unquote(filename)
+            uploader = re.sub('_', ' ', i.group('uploader'))
+            uploader = undoHTMLEntities(text=uploader)
+            uploader = urllib.unquote(uploader)
+            images.append([filename, url, uploader])
+            #print filename, url
+        
+        if re.search(r_next, raw):
+            offset = re.findall(r_next, raw)[0]
+            retries += 5 # add more retries if we got a page with offset
+        else:
+            offset = ''
+    
+    print '    Found %d images' % (len(images))
+    images.sort()
+    return images
+
+def getImageFilenamesURLAPI(config={}):
+    """ Retrieve file list: filename, url, uploader """
+    print 'Retrieving image filenames'
+    headers = {'User-Agent': getUserAgent()}
+    aifrom = '!'
+    images = []
+    while aifrom:
+        sys.stderr.write('.') #progress
+        params = {'action': 'query', 'list': 'allimages', 'aiprop': 'url|user', 'aifrom': aifrom, 'format': 'xml', 'ailimit': 500}
+        data = urllib.urlencode(params)
+        req = urllib2.Request(url=config['api'], data=data, headers=headers)
+        try:
+            f = urllib2.urlopen(req)
+        except:
+            try:
+                print 'Server is slow... Waiting some seconds and retrying...'
+                time.sleep(10)
+                f = urllib2.urlopen(req)
+            except:
+                print 'An error has occurred while retrieving page titles with API'
+                print 'Please, resume the dump, --resume'
+                sys.exit()
+        xml = f.read()
+        f.close()
+        m = re.findall(r'<allimages aifrom="([^>]+)" />', xml)
+        if m:
+            aifrom = undoHTMLEntities(text=m[0]) #&quot; = ", etc
+        else:
+            aifrom = ''
+        m = re.compile(r'(?im)<img name="(?P<filename>[^"]+)"[^>]*user="(?P<uploader>[^"]+)"[^>]* url="(?P<url>[^"]+)"[^>]*/>').finditer(xml) # Retrieves a filename, uploader, url triple from the name, user, url field of the xml line; space before url needed to avoid getting the descriptionurl field instead.
+        for i in m:
+            url = i.group('url')
+            if url[0] == '/' or (not url.startswith('http://') and not url.startswith('https://')): #is it a relative URL?
+                if url[0] == '/': #slash is added later
+                    url = url[1:]
+                domainalone = config['index'].split('://')[1].split('/')[0] #remove from :// (http or https) until the first / after domain
+                url = '%s://%s/%s' % (config['index'].split('://')[0], domainalone, url) # concat http(s) + domain + relative url
+            url = undoHTMLEntities(text=url)
+            #url = urllib.unquote(url) #do not use unquote with url, it break some urls with odd chars
+            url = re.sub(' ', '_', url)
+            filename = re.sub('_', ' ', i.group('filename'))
+            filename = undoHTMLEntities(text=filename)
+            filename = urllib.unquote(filename)
+            uploader = re.sub('_', ' ', i.group('uploader'))
+            uploader = undoHTMLEntities(text=uploader)
+            uploader = urllib.unquote(uploader)
+            images.append([filename, url, uploader])           
+                    
+    print '    Found %d images' % (len(images))
+    images.sort()
+    return images
 
 def undoHTMLEntities(text=''):
     """  """
@@ -559,7 +618,72 @@ def undoHTMLEntities(text=''):
     text = re.sub('&#039;', '\'', text)
     return text
 
+def generateImageDump(config={}, other={}, images=[], start=''):
+    """ Save files and descriptions using a file list """
+    #fix use subdirectories md5
+    print 'Retrieving images from "%s"' % (start and start or 'start')
+    imagepath = '%s/images' % (config['path'])
+    if not os.path.isdir(imagepath):
+        print 'Creating "%s" directory' % (imagepath)
+        os.makedirs(imagepath)
     
+    c = 0
+    lock = True
+    if not start:
+        lock = False
+    for filename, url, uploader in images:
+        if filename == start: #start downloading from start, included
+            lock = False
+        if lock:
+            continue
+        delay(config=config)
+        
+        #saving file
+        #truncate filename if length > 100 (100 + 32 (md5) = 132 < 143 (crash limit). Later .desc is added to filename, so better 100 as max)
+        filename2 = filename
+        if len(filename2) > other['filenamelimit']:
+            # split last . (extension) and then merge
+            filename2 = truncateFilename(other=other, filename=filename2)
+            print 'Truncating filename, it is too long. Now it is called:', filename2
+        urllib.urlretrieve(url=url, filename='%s/%s' % (imagepath, filename2), data=urllib.urlencode({})) #fix, image request fails on wikipedia (POST neither works?)
+        
+        #saving description if any
+        xmlfiledesc = getXMLFileDesc(config=config, title='Image:%s' % (filename)) 
+        f = open('%s/%s.desc' % (imagepath, filename2), 'w')
+        if re.search(r'<text xml:space="preserve"/>', xmlfiledesc):
+            #empty desc
+            xmlfiledesc = ''
+        elif re.search(r'<text xml:space="preserve">', xmlfiledesc):
+            xmlfiledesc = xmlfiledesc.split('<text xml:space="preserve">')[1].split('</text>')[0]
+            xmlfiledesc = undoHTMLEntities(text=xmlfiledesc)
+        else: #failure when retrieving desc?
+            xmlfiledesc = ''
+        f.write(xmlfiledesc)
+        f.close()
+        c += 1
+        if c % 10 == 0:
+            print '    Downloaded %d images' % (c)
+    print 'Downloaded %d images' % (c)
+    
+def saveLogs(config={}):
+    """  """
+    #get all logs from Special:Log
+    """parse
+    <select name='type'>
+    <option value="block">Bloqueos de usuarios</option>
+    <option value="rights">Cambios de perfil de usuario</option>
+    <option value="protect" selected="selected">Protecciones de páginas</option>
+    <option value="delete">Registro de borrados</option>
+    <option value="newusers">Registro de creación de usuarios</option>
+    <option value="merge">Registro de fusiones</option>
+    <option value="import">Registro de importaciones</option>
+    <option value="patrol">Registro de revisiones</option>
+    <option value="move">Registro de traslados</option>
+    <option value="upload">Subidas de archivos</option>
+    <option value="">Todos los registros</option>
+    </select>
+    """
+    delay(config=config)
 
 def domain2prefix(config={}):
     """  """
@@ -626,6 +750,8 @@ And one of these at least:
     --xml: it generates a XML dump. It retrieves full history of pages located in namespace = 0 (articles)
            If you want more namespaces, use the parameter --namespaces=0,1,2,3... or --namespaces=all
            If you want only the current versions of articles (not the full history), use --curonly option too
+    --images: it generates an image dump
+    --logs: it generates a log dump
 
 You can resume previous incomplete dumps:
     --resume: it resumes previous incomplete dump. When using --resume, --path is mandatory (path to directory where incomplete dump is).
@@ -643,10 +769,14 @@ def getParameters(params=[]):
         params = sys.argv[1:]
     config = {
         'curonly': False,
-        'date': datetime.datetime.now().strftime('%Y%m%d%H%M%S'),
-        'api': "http://en.wikipedia.org/w/api.php",
+#        'date': datetime.datetime.now().strftime('%Y%m%d%H%M%S'),
+        'date': datetime.datetime.now().strftime('%Y%m%d'),
+
+        'api': '',
         'index': '',
-        'xml': True,
+        'images': False,
+        'logs': False,
+        'xml': False,
         'namespaces': ['all'],
         'exnamespaces': [],
         'path': '',
@@ -659,7 +789,7 @@ def getParameters(params=[]):
     }
     #console params
     try:
-        opts, args = getopt.getopt(params, "", ["h", "help", "path=", "api=", "index=", "xml", "curonly", "resume", "delay=", "namespaces=", "exnamespaces=", "force", ])
+        opts, args = getopt.getopt(params, "", ["h", "help", "path=", "api=", "index=", "images", "logs", "xml", "curonly", "resume", "delay=", "namespaces=", "exnamespaces=", "force", ])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -686,6 +816,10 @@ def getParameters(params=[]):
                 print 'index.php must start with http:// or https://'
                 sys.exit()
             config["index"] = a
+        elif o in ("--images"):
+            config["images"] = True
+        elif o in ("--logs"):
+            config["logs"] = True
         elif o in ("--xml"):
             config["xml"] = True
         elif o in ("--curonly"):
@@ -725,7 +859,7 @@ def getParameters(params=[]):
     #(config['index'] and not re.search('/index\.php', config['index'])) or \ # in EditThis there is no index.php, it is empty editthis.info/mywiki/?title=...
     if (not config['api'] and not config['index']) or \
        (config['api'] and not re.search('/api\.php', config['api'])) or \
-       not (config["xml"] ) or \
+       not (config["xml"] or config["images"] or config["logs"]) or \
        (other['resume'] and not config['path']):
         usage()
         sys.exit()
@@ -785,6 +919,9 @@ def removeIP(raw=''):
     return raw
 
 
+import boto
+from boto.s3.key import Key
+
 def percent_cb(complete, total):
     sys.stdout.write('.')
     sys.stdout.flush()
@@ -794,7 +931,7 @@ def push_zip (file):
 
     year = d.year
     month= d.month
-    block= "wikipedia-delete-%0.4d-%02d" % (year, month)
+    block= "wikipedia-template-%0.4d-%02d" % (year, month)
     print "going to use %s" % block
     conn = boto.connect_s3(host='s3.us.archive.org', is_secure=False)
     bucket = conn.get_bucket(block)
@@ -804,6 +941,16 @@ def push_zip (file):
     k.key = file
     headers = {}
     headers['x-archive-queue-derive'] = '0'
+    hdrs['x-archive-auto-make-bucket']= "1"
+    hdrs['x-archive-ignore-preexisting-bucket']= "1"
+    hdrs['x-archive-meta-mediatype']= "texts"
+    hdrs['x-archive-meta-collection']="opensource"
+    hdrs['x-archive-meta-title']="wikipedia templates index "
+    hdrs['x-archive-meta-description']="wikipedia templates and documentations"
+    hdrs['x-archive-meta-creator']="james michael dupont<jamesmikedupont@gmail.com>"
+    hdrs['x-archive-meta-subject']="wikipedia,mediawiki"
+    hdrs['x-archive-meta-licenseurl']='http://creativecommons.org/licenses/by-nc/3.0/'
+
     k.set_contents_from_filename(file,
                                  headers=headers,
                                  cb=percent_cb, 
@@ -817,10 +964,26 @@ def postprocess(path): # now lets post process  the outpu
     zipfilename="wtarchive%s.zip" % datestring
     os.system ("zip %s %s/*" % (zipfilename,path))
     os.system ("md5sum %s > %s.md5" % (zipfilename,zipfilename))    
-    
-    push_zip (zipfilename)
-    push_zip ("%s.md5" % zipfilename)
 
+## TODO :
+#    push_zip (zipfilename)
+#    push_zip ("%s.md5" % zipfilename)
+
+def resumelist():
+    f = open('templates.txt', 'r')
+    raw = f.read()
+    titles = raw.split('\n')
+    lasttitle = titles[-1]
+    if not lasttitle: #empty line at EOF ?
+        lasttitle = titles[-2]
+    f.close()
+    titles2=[]
+    for title in titles:
+            t2 = urllib.unquote(title) #do not use unquote with url, it break some urls with odd chars
+            titles2.append(t2)
+            print 'read %s' % t2
+
+    return titles2
 
 def main(params=[]):
     """ Main function """
@@ -829,20 +992,171 @@ def main(params=[]):
     config, other = getParameters(params=params)
         
     print 'Analysing %s' % (config['api'] and config['api'] or config['index'])
-    c = 2
-    originalpath = config['path'] # to avoid concat blabla-2, blabla-2-3, and so on...
 
-    os.mkdir(config['path'])
-    saveConfig(config=config, configfilename=configfilename)
+    if not(os.path.exists(config['path'])):
+        os.mkdir(config['path'])    
+    mytitles=resumelist()
+
+
+    generateXMLDump(config=config, titles=mytitles)
+    return
+
+    #creating path or resuming if desired
+    c = 2
+#    other['resume'] = False
+    originalpath = config['path'] # to avoid concat blabla-2, blabla-2-3, and so on...
+    while not other['resume'] and os.path.isdir(config['path']): #do not enter if resume is request from begining
+        print '\nWarning!: "%s" path exists' % (config['path'])
+        reply = 'y'
+        while reply.lower() not in ['yes', 'y', 'no', 'n']:
+            reply = raw_input('There is a dump in "%s", probably incomplete.\nIf you choose resume, to avoid conflicts, the parameters you have chosen in the current session will be ignored\nand the parameters available in "%s/%s" will be loaded.\nDo you want to resume ([yes, y], [no, n])? ' % (config['path'], config['path'], configfilename))
+        if reply.lower() in ['yes', 'y']:
+            if not os.path.isfile('%s/%s' % (config['path'], configfilename)):
+                print 'No config file found. I can\'t resume. Aborting.'
+                sys.exit()
+            print 'You have selected YES'
+            other['resume'] = True
+            break
+        elif reply.lower() in ['no', 'n']:
+            print 'You have selected NO'
+            other['resume'] = False
+        config['path'] = 'templates_%s-%d' % (originalpath, c)
+        print 'Trying "%s"...' % (config['path'])
+        c += 1
+
+    if other['resume']:
+        print 'Loading config file...'
+        config = loadConfig(config=config, configfilename=configfilename)
+    else:
+        os.mkdir(config['path'])
+        saveConfig(config=config, configfilename=configfilename)
     
     titles = []
-
-    print 'Trying generating a new dump into a new directory...'
-
-    titles += getPageTitles(config=config)
-    saveTitles(config=config, titles=titles)
-    generateXMLDump(config=config, titles=titles)
-
+    images = []
+    if other['resume']:
+        print 'Resuming previous dump process...'
+        if config['xml']:
+            #load titles
+            lasttitle = ''
+            try:
+                f = open('%s/%s-%s-titles.txt' % (config['path'], domain2prefix(config=config), config['date']), 'r')
+                raw = f.read()
+                titles = raw.split('\n')
+                lasttitle = titles[-1]
+                if not lasttitle: #empty line at EOF ?
+                    lasttitle = titles[-2]
+                f.close()
+            except:
+                pass #probably file doesnot exists
+            if lasttitle == '--END--':
+                #titles list is complete
+                print 'Title list was completed in the previous session'
+            else:
+                print 'Title list is incomplete. Reloading...'
+                #do not resume, reload, to avoid inconsistences, deleted pages or so
+                titles = getPageTitles(config=config)
+                saveTitles(config=config, titles=titles)
+            #checking xml dump
+            xmliscomplete = False
+            lastxmltitle = ''
+            try:
+                f = open('%s/%s-%s-%s.xml' % (config['path'], domain2prefix(config=config), config['date'], config['curonly'] and 'current' or 'history'), 'r')
+                for l in f:
+                    if re.findall('</mediawiki>', l):
+                        #xml dump is complete
+                        xmliscomplete = True
+                        break
+                    xmltitles = re.findall(r'<title>([^<]+)</title>', l) #weird if found more than 1, but maybe
+                    if xmltitles:
+                        lastxmltitle = undoHTMLEntities(text=xmltitles[-1])
+                f.close()
+            except:
+                pass #probably file doesnot exists
+            #removing --END-- before getXMLs
+            while titles and titles[-1] in ['', '--END--']:
+                titles = titles[:-1]
+            if xmliscomplete:
+                print 'XML dump was completed in the previous session'
+            elif lastxmltitle:
+                #resuming...
+                print 'Resuming XML dump from "%s"' % (lastxmltitle)
+                generateXMLDump(config=config, titles=titles, start=lastxmltitle)
+            else:
+                #corrupt? only has XML header?
+                print 'XML is corrupt? Regenerating...'
+                generateXMLDump(config=config, titles=titles)
+        
+        if config['images']:
+            #load images
+            lastimage = ''
+            try:
+                f = open('%s/%s-%s-images.txt' % (config['path'], domain2prefix(config=config), config['date']), 'r')
+                raw = f.read()
+                lines = raw.split('\n')
+                for l in lines:
+                    if re.search(r'\t', l):
+                        images.append(l.split('\t'))
+                lastimage = lines[-1]
+                f.close()
+            except:
+                pass #probably file doesnot exists
+            if lastimage == '--END--':
+                print 'Image list was completed in the previous session'
+            else:
+                print 'Image list is incomplete. Reloading...'
+                #do not resume, reload, to avoid inconsistences, deleted images or so
+                if config['api']:
+                    images=getImageFilenamesURLAPI(config=config)
+                else:
+                    images = getImageFilenamesURL(config=config)
+                saveImageFilenamesURL(config=config, images=images)
+            #checking images directory
+            listdir = []
+            try:
+                listdir = os.listdir('%s/images' % (config['path']))
+            except:
+                pass #probably directory does not exist
+            listdir.sort()
+            complete = True
+            lastfilename = ''
+            lastfilename2 = ''
+            c = 0
+            for filename, url, uploader in images:
+                lastfilename2 = lastfilename
+                lastfilename = filename #return always the complete filename, not the truncated
+                filename2 = filename
+                if len(filename2) > other['filenamelimit']:
+                    filename2 = truncateFilename(other=other, filename=filename2)
+                if filename2 not in listdir:
+                    complete = False
+                    break
+                c +=1
+            print '%d images were found in the directory from a previous session' % (c)
+            if complete:
+                #image dump is complete
+                print 'Image dump was completed in the previous session'
+            else:
+                generateImageDump(config=config, other=other, images=images, start=lastfilename2) # we resume from previous image, which may be corrupted (or missing .desc)  by the previous session ctrl-c or abort
+        
+        if config['logs']:
+            #fix
+            pass
+    else:
+        print 'Trying generating a new dump into a new directory...'
+        if config['xml']:
+            titles += getPageTitles(config=config)
+            saveTitles(config=config, titles=titles)
+            generateXMLDump(config=config, titles=titles)
+        if config['images']:
+            if config['api']:
+                images += getImageFilenamesURLAPI(config=config)
+            else:
+                images += getImageFilenamesURL(config=config)
+            saveImageFilenamesURL(config=config, images=images)
+            generateImageDump(config=config, other=other, images=images)
+        if config['logs']:
+            saveLogs(config=config)
+    
     #save index.php as html, for license details at the bootom of the page
     if os.path.exists('%s/index.html' % (config['path'])):
         print 'index.html exists, do not overwrite'

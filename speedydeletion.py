@@ -8,12 +8,38 @@ import config, pagegenerators, catlib
 import replace
 import xmlreader
 
-
 from shove import Shove
+file_store = Shove('file://wikiaupload')
 
-mem_store = Shove()
-file_store = Shove('file://mystore')
+def signpage(site,pagename) :
 
+    generator = [pywikibot.Page(
+            site,
+            pagename
+            )]
+    # Main Loop
+    for page in generator:
+        print "going to process %s" % page.urlname()
+        try:
+            text = page.get()
+        except:
+            text = ""
+        
+        m = re.search("==archived on speedy deletion wikia==" , text)
+        if not(m):
+            m = re.search("==archived==" , text)
+            if not( m):
+                summary="notification of speedy deletion page"
+                newname =page.urlname()
+                newname = newname.replace('Talk%3A', '')
+                newtext= "==archived on speedy deletion wikia==\nThis endangered article has been archived here http://speedydeletion.wikia.com/wiki/%s so that it is not lost if deleted. Changes made after the archiving will not be copied.\n~~~~" % newname
+                (text, newtext, always) = add_text(page, newtext, summary, regexSkip,
+                                                   regexSkipUrl, always, up, True, reorderEnabled=reorderEnabled,
+                                                   create=talkPage)
+            else:
+                print "skipping %s" % page.urlname()
+        else:
+            print "skipping %s" % page.urlname()
 
 def main(*args):
     genFactory = pagegenerators.GeneratorFactory()
@@ -27,6 +53,8 @@ def main(*args):
         xmlfilename = arg
 
     print xmlfilename 
+
+    insite = pywikibot.getSite("en","wikipedia")
 
     importsite = "speedydeletion"
 
@@ -70,6 +98,9 @@ def main(*args):
                         print outpage.site.family.name
                         print outpage.site.lang
                         outpage.put(contents)
+
+                        signpage(insite,"Talk:%s" % pagename)
+
                     try :
                         file_store[title] = 1
                     except:
