@@ -45,8 +45,9 @@ file_store = Shove('file://mystore')
 
 def saveName(title):
 #    an = title.encode("ascii","ignore")
-    print "storing %s" % title
-    file_store[title] = title
+    name = urllib.unquote(title)
+    print "storing %s" % name
+    file_store[name] = title
 
 def isNewTitle(name):
     name = urllib.unquote(name)
