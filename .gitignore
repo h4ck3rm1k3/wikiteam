@@ -1,0 +1,8 @@
+*#
+*.pyc
+*.py~
+data/
+build/
+watchlists/
+logs/
+login-data/
