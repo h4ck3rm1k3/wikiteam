@@ -46,12 +46,12 @@ file_store = Shove('file://mystore')
 def saveName(title):
 #    an = title.encode("ascii","ignore")
     name = urllib.unquote(title)
-    print "storing %s" % name
+#    print "storing %s" % name
     file_store[name] = title
 
 def isNewTitle(name):
     name = urllib.unquote(name)
-    print "checking %s" % name
+#    print "checking %s" % name
 
     try :
         if (file_store[name] ) :
@@ -128,7 +128,7 @@ def getNamespaces(config={}):
     
     #retrieve all titles from Special:Allpages, if the wiki is big, perhaps there are sub-Allpages to explore
     namespaces = [i for i in set(namespaces)] #uniques
-    print '%d namespaces found' % (len(namespaces))
+#    print '%d namespaces found' % (len(namespaces))
     return namespaces, namespacenames
   
 
@@ -142,9 +142,9 @@ def getSDTitles(site):
          'Candidates_for_speedy_deletion_for_unspecified_reason') :
         cat = catlib.Category(site, x)
         pages = cat.articlesList(False)
-        print pages
+#        print pages
         for x in pages :
-            print x.urlname()
+#            print x.urlname()
             n = x.urlname()
             an = n.encode("ascii","ignore")
             if (isNewTitle(an)):
@@ -159,7 +159,7 @@ def getAfd(site):
         ) :
         cat = catlib.Category(site, x)
         pages = cat.articlesList(False)
-        print pages
+#        print pages
         for x in pages :           
             n = x.urlname()
             an = n.encode("ascii","ignore")
@@ -231,7 +231,7 @@ def getPageTitlesScrapper(config={}):
                 if not i.group('title') in titles:
                     titles.append(undoHTMLEntities(text=i.group('title')))
                     c += 1
-        print '    %d titles retrieved in the namespace %d' % (c, namespace)
+#        print '    %d titles retrieved in the namespace %d' % (c, namespace)
     return titles
 
 def getPageTitles(config={}):
@@ -346,7 +346,7 @@ def getXMLPage(config={}, title='', verbose=True):
     title_ = title    
     title_ = re.sub(' ', '_', title_)
     title_ = urllib.unquote(title_)
-    print "after check %s" % title_
+#    print "after check %s" % title_
 
 #    title_ = re.sub('%3A', ':', title_)
 
@@ -417,7 +417,7 @@ def parseAfd(xml):
     m = re.search('===\[\[(.+)\]\]===', xml)
     if (m):
         name=m.group(1)
-        print "found new page %s" % name
+        print "found new afd page %s" % name
         return name
     return 0
 
@@ -469,7 +469,7 @@ def generateXMLDump(config={}, titles=[], start=''):
     titles2 = []
     for title in titles:
         if not(isNewTitle(title)):
-            print 'seen %s ' % title
+#            print 'seen %s ' % title
             continue
 
         if not title.strip():
@@ -501,7 +501,7 @@ def generateXMLDump(config={}, titles=[], start=''):
     # now we add in the articles for deletion
     for title in titles2:
         if not(isNewTitle(title)):
-            print 'seen %s ' % title
+#            print 'seen %s ' % title
             continue
 
         if not title.strip():

@@ -80,23 +80,24 @@ def main(*args):
                 else:
                     pywikibot.output(u'not exists %s' % entry.title)
             except KeyError :
-                print sys.exc_type, ":", "%s is not in the list." % sys.exc_value
-                pywikibot.output(u'key error %s' % entry.title)
+#                print sys.exc_type, ":", "%s is not in the list." % sys.exc_value
+#                pywikibot.output(u'key error %s' % entry.title)
                 try :
                     outpage = pywikibot.Page(site=outsite, title=entry.title, insite=outsite)
                     if outpage.exists():
                         pywikibot.output(u'there is an article %s' % entry.title)
                         file_store[title] = 1
                     else:
-                        pywikibot.output(u'is not there  %s' % entry.title)
+                        pywikibot.output(u'is not there, adding  %s' % entry.title)
                         contents = entry.text
                         usernames = entry.username
-                        contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
-                        print "going to put outpage"
+                        if re.search('Template:', title):
+                            contents = contents +  "\n<noinclude>{{wikipedia-template|%s}}</noinclude>" % usernames
+                        else:
+                            contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
+#                        contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
+
                         outpage._site=outsite
-                        print outpage.site
-                        print outpage.site.family.name
-                        print outpage.site.lang
                         outpage.put(contents)
 
 #                        signpage(insite,"Talk:%s" % pagename)
