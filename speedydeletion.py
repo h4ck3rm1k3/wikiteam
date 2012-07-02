@@ -92,7 +92,7 @@ def main(*args):
                         contents = entry.text
                         usernames = entry.username
                         if re.search('Template:', title):
-                            contents = contents +  "\n<noinclude>{{wikipedia-template|%s}}</noinclude>" % usernames
+                            contents = contents +  "<noinclude>{{wikipedia-template|%s}}</noinclude>" % usernames
                         else:
                             contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
 #                        contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
