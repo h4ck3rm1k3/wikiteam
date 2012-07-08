@@ -215,7 +215,8 @@ class XmlDumpReplacePageGenerator:
         if "inside" in self.exceptions:
             self.excsInside += self.exceptions['inside']
         import xmlreader
-        self.site = pywikibot.getSite()
+        importsite = "speedydeletion"
+        self.site = pywikibot.getSite("en",importsite)
         dump = xmlreader.XmlDump(self.xmlFilename)
         self.parser = dump.parse()
 

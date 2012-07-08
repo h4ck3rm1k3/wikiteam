@@ -4494,7 +4494,7 @@ def getall(site, pages, throttle=True, force=False):
 
     """
     # TODO: why isn't this a Site method?
-    print "HELP!"
+#    print "HELP!"
     traceback.print_exc(file=sys.stdout)
     pages = list(pages)  # if pages is an iterator, we need to make it a list
     data = []
@@ -7587,6 +7587,7 @@ sysopnames['%s']['%s']='name' to your user-config.py"""
 
     def getSite(self, code):
         """Return Site object for language 'code' in this Family."""
+        print "get site: %s %s\n" % (code, self.family)
         return getSite(code = code, fam = self.family, user=self.user)
 
     def namespace(self, num, all = False):
