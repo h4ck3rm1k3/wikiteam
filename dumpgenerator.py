@@ -141,7 +141,8 @@ def getSDTitles(site):
          'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
          'Candidates_for_speedy_deletion_for_unspecified_reason') :
         cat = catlib.Category(site, x)
-        pages = cat.articlesList(False)
+#        pages = cat.articlesList(False)
+        pages = cat.articlesList(recurse = True)
 #        print pages
         for x in pages :
 #            print x.urlname()

@@ -86,7 +86,11 @@ def main(*args):
                     outpage = pywikibot.Page(site=outsite, title=entry.title, insite=outsite)
                     if outpage.exists():
                         pywikibot.output(u'there is an article %s' % entry.title)
-                        file_store[title] = 1
+                        try:
+                            file_store[title] = 1
+                        except  KeyError :
+                            pywikibot.output(u'key error saving article %s' % entry.title)
+
                     else:
                         pywikibot.output(u'is not there, adding  %s' % entry.title)
                         contents = entry.text
