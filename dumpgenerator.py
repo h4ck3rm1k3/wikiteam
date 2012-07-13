@@ -139,6 +139,11 @@ def getSDTitles(site):
          "Expired_proposed_deletions",
          'Candidates_for_speedy_deletion_as_hoaxes',
          'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
+         'Candidates_for_speedy_deletion_as_lacking_context',
+         'Candidates for speedy deletion as pages previously deleted via deletion discussion',
+         'Contested candidates for speedy deletion',
+         'Speedy_deletion_candidates_with_talk_pages',
+         'Candidates_for_speedy_deletion_as_duplicating_an_existing_topic',
          'Candidates_for_speedy_deletion_for_unspecified_reason') :
         cat = catlib.Category(site, x)
 #        pages = cat.articlesList(False)
