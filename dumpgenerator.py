@@ -801,7 +801,7 @@ def push_zip (file):
 
     year = d.year
     month= d.month
-    block= "wikipedia-delete-v2-%0.4d-%02d" % (year, month)
+    block= "wikipedia-delete-v3-%0.4d-%02d" % (year, month)
     print "going to use %s" % block
     conn = boto.connect_s3(host='s3.us.archive.org', is_secure=False)
     bucket = conn.get_bucket(block)
