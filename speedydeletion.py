@@ -110,8 +110,12 @@ def main(*args):
                         file_store[title] = 1
                     except:
                         pywikibot.output(u'could not save %s! to the list of article' % entry.title)
+                except:
+                    pywikibot.output(u'could not process %s! ' % entry.title)
                 finally:
                     count = count + 1
+            except:
+                pywikibot.output(u'could not process %s! ' % entry.title)
             finally:
                 count = count + 1
                 #print "done with %s %d" % (entry.title, count)
