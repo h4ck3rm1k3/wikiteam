@@ -52,6 +52,7 @@ while ($content =~ m/\>File:([^<]+)</g)
 
     next if ($n =~ /\//); # skip slashes in the name
     next if ($n =~ /\\/); # skip slashes in the name
+    next if ($n =~ /http:/); # skip urls
 
     if (/<li><s><a href=\"\/wiki\/File:$n/)
     {
