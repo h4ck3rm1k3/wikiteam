@@ -68,53 +68,62 @@ def main(*args):
         title=entry.title.encode("ascii","ignore")
         
 
-        m = re.search("Wikipedia:" , entry.title)
-        if  m:
+        if  re.search("^Wikipedia:" , entry.title):
             pywikibot.output(u'skipping %s' % entry.title)
-            next;
-        if entry.title != "Main Page" :
-            try :
-                if (file_store[title] ) :
-                    count = count +1
-#                    pywikibot.output(u'was cached %s' % entry.title)
-                else:
+            continue
+
+        if  re.search("^User:" , entry.title):
+            pywikibot.output(u'skipping %s' % entry.title)
+            continue
+
+        if  re.search("^User Talk:" , entry.title):
+            pywikibot.output(u'skipping %s' % entry.title)
+            continue
+
+        if  re.search(".css$" , entry.title):
+            pywikibot.output(u'skipping %s' % entry.title)
+            continue
+
+        if  re.search("^Main Page" , entry.title):
+            pywikibot.output(u'skipping %s' % entry.title)
+            continue
+
+        pywikibot.output(u'Considering %s' % entry.title)
+
+        try :
+            if (file_store[title] ) :
+                count = count +1
+            else:
                     pywikibot.output(u'not exists %s' % entry.title)
-            except KeyError :
-#                print sys.exc_type, ":", "%s is not in the list." % sys.exc_value
-#                pywikibot.output(u'key error %s' % entry.title)
-                try :
-                    outpage = pywikibot.Page(site=outsite, title=entry.title, insite=outsite)
-                    if outpage.exists():
-                        pywikibot.output(u'there is an article %s' % entry.title)
-                        try:
-                            file_store[title] = 1
-                        except  KeyError :
-                            pywikibot.output(u'key error saving article %s' % entry.title)
-
-                    else:
-                        pywikibot.output(u'is not there, adding  %s' % entry.title)
-                        contents = entry.text
-                        usernames = entry.username
-                        if re.search('Template:', title):
-                            contents = contents +  "<noinclude>{{wikipedia-template|%s}}</noinclude>" % usernames
-                        else:
-                            contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
-#                        contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
-
-                        outpage._site=outsite
-                        outpage.put(contents)
-
-#                        signpage(insite,"Talk:%s" % pagename)
-
-                    try :
+        except KeyError :
+            try :
+                outpage = pywikibot.Page(site=outsite, title=entry.title, insite=outsite)
+                if outpage.exists():
+                    pywikibot.output(u'there is an article %s' % entry.title)
+                    try:
                         file_store[title] = 1
-                    except:
-                        pywikibot.output(u'could not save %s! to the list of article' % entry.title)
-                finally:
-                    count = count + 1
+                    except  KeyError :
+                        pywikibot.output(u'key error saving article %s' % entry.title)
+                            
+                else:
+                    pywikibot.output(u'is not there, adding  %s' % entry.title)
+                    contents = entry.text
+                    usernames = entry.username
+                    if re.search('Template:', title):
+                        contents = contents +  "<noinclude>{{wikipedia-template|%s}}</noinclude>" % usernames
+                    else:
+                        contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
+
+                    outpage._site=outsite
+                    outpage.put(contents)
+                try :
+                    file_store[title] = 1
+                except:
+                    pywikibot.output(u'could not save %s! to the list of article' % entry.title)
             finally:
                 count = count + 1
-                #print "done with %s %d" % (entry.title, count)
+        finally:
+            count = count + 1
 
 
 if __name__ == "__main__":
