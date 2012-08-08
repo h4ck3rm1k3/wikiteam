@@ -63,6 +63,14 @@ def main(*args):
 
     dump = xmlreader.XmlDump(xmlfilename)
     count = 0
+
+    try :
+        print "try to open %s\n" % xmlfilename
+        with open(xmlfilename) as f: pass
+    except :
+        print "cannot open %s\n" % xmlfilename
+        exit (0)
+
     for entry in dump.parse():
 #        print  file_store[entry.title] 
         title=entry.title.encode("ascii","ignore")
