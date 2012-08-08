@@ -821,12 +821,12 @@ def postprocess(path): # now lets post process  the outpu
     # make a zip file with the path
     d =datetime.datetime.now()
     datestring =d.strftime("%d%m%y%H%M%S")
-    zipfilename="wtarchive%s.zip" % datestring
-    os.system ("zip %s %s/*" % (zipfilename,path))
-    os.system ("md5sum %s > %s.md5" % (zipfilename,zipfilename))    
+    zipfilename="wtarchive%s.tgz" % datestring
+    os.system ("tar -czf %s %s/*" % (zipfilename,path))
+#    os.system ("md5sum %s > %s.md5" % (zipfilename,zipfilename))    
     
     push_zip (zipfilename)
-    push_zip ("%s.md5" % zipfilename)
+#    push_zip ("%s.md5" % zipfilename)
 
 
 def main(params=[]):
