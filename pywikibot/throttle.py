@@ -37,7 +37,7 @@ class Throttle(object):
                  multiplydelay=True, verbosedelay=False, write=False):
         self.lock = threading.RLock()
         self.mysite = None
-        self.ctrlfilename = config.datafilepath('pywikibot', 'throttle.ctrl')
+        self.ctrlfilename = config.datafilepath('pywikibot2', 'throttle2.ctrl')
         self.mindelay = mindelay
         if self.mindelay is None:
             self.mindelay = config.minthrottle
@@ -234,7 +234,8 @@ class Throttle(object):
         """
         self.lock.acquire()
         try:
-            wait = self.waittime(write=write or self.write)
+            #wait = self.waittime(write=write or self.write)
+            wait = 1
             # Calculate the multiplicity of the next delay based on how
             # big the request is that is being posted now.
             # We want to add "one delay" for each factor of two in the
@@ -271,7 +272,8 @@ class Throttle(object):
             # wait at least 5 seconds but not more than 120 seconds
             delay = min(max(5, lagtime//2), 120)
             # account for any time we waited while acquiring the lock
-            wait = delay - (time.time() - started)
+#            wait = delay - (time.time() - started)
+            wait = 1
             if wait > 0:
                 if wait > config.noisysleep:
                     pywikibot.output(
