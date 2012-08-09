@@ -19,6 +19,7 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
+import subprocess    
 
 def main(*args):
     genFactory = pagegenerators.GeneratorFactory()
@@ -35,8 +36,6 @@ def main(*args):
     importsite = "speedydeletion"
     outsite = pywikibot.getSite("en",importsite)
     outsite.forceLogin()
-    dump = xmlreader.XmlDump(xmlfilename)
-    count = 0
 
     try :
         print "try to open %s\n" % xmlfilename
@@ -45,6 +44,14 @@ def main(*args):
         print "cannot open %s\n" % xmlfilename
         exit (0)
 
+    tempfile = "%s.tmp" % xmlfilename
+
+    status = subprocess.call("xmllint --recover  %s -o %s" % (xmlfilename,tempfile) , shell=True)
+    print "status %d\n" % status
+
+    dump = xmlreader.XmlDump(tempfile)
+    count = 0
+    
     for entry in dump.parse():
 #        print  file_store[entry.title] 
         title=entry.title.encode("utf8","ignore")
