@@ -132,54 +132,37 @@ def getNamespaces(config={}):
     return namespaces, namespacenames
   
 
-def getSDTitles(site):
+#        "Kansas_Legislature",
+#        "Members_of_the_Kansas_Legislature"
+#        "Government_of_Kansas"
+#        "Members_of_the_Kansas_House_of_Representatives"     ,   
+#        "Members_of_state_lower_houses_in_the_United_States",        
+
+def getTitles(site):
     titles = []
     for x in (        
-         "Proposed_deletion",
-         "Expired_proposed_deletions",
-         'Candidates_for_speedy_deletion_as_hoaxes',
-         'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
-         'Candidates_for_speedy_deletion_as_lacking_context',
-         'Candidates for speedy deletion as pages previously deleted via deletion discussion',
-         'Contested candidates for speedy deletion',
-         'Speedy_deletion_candidates_with_talk_pages',
-         'Candidates_for_speedy_deletion_as_duplicating_an_existing_topic',
-         'Candidates_for_speedy_deletion_for_unspecified_reason') :
-        cat = catlib.Category(site, x)
-#        pages = cat.articlesList(False)
-        pages = cat.articlesList(recurse = True)
-#        print pages
-        for x in pages :
-#            print x.urlname()
-            n = x.urlname()
-            an = n.encode("ascii","ignore")
-            if (isNewTitle(an)):
-                titles +=  [n]
-
-    return titles
-
-def getAfd(site):
-    titles = []
-    for x in (
-        'AfD_debates',
+        "State_lower_houses_in_the_United_States",
+        "State_political_office-holders_in_the_United_States",
+        "State_legislatures_of_the_United_States",
+        "State_legislators_of_the_United_States",
+        "Speakers of state legislatures in the United States"
         ) :
         cat = catlib.Category(site, x)
-        pages = cat.articlesList(False)
-#        print pages
-        for x in pages :           
+        pages = cat.articlesList(recurse = True)
+        for x in pages :
             n = x.urlname()
             an = n.encode("ascii","ignore")
-            if isNewTitle(an):
-                    titles +=  [n]
+#            if (isNewTitle(an)):
+            titles +=  [n]
 
     return titles
+
 
 def getPageTitlesAPI(config={}):
     """ Uses the API to get the list of page titles """
     titles = []
     site = pywikibot.getSite()
-    titles += getAfd(site)
-    titles += getSDTitles(site)
+    titles += getTitles(site)
     return titles
 
 def getPageTitlesScrapper(config={}):
@@ -823,10 +806,7 @@ def postprocess(path): # now lets post process  the outpu
     datestring =d.strftime("%d%m%y%H%M%S")
     zipfilename="wtarchive%s.tgz" % datestring
     os.system ("tar -czf %s %s/*" % (zipfilename,path))
-#    os.system ("md5sum %s > %s.md5" % (zipfilename,zipfilename))    
-    
-    push_zip (zipfilename)
-#    push_zip ("%s.md5" % zipfilename)
+#    push_zip (zipfilename)
 
 
 def main(params=[]):
