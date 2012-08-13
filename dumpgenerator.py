@@ -142,10 +142,10 @@ def getTitles(site):
     titles = []
     for x in (        
         "State_lower_houses_in_the_United_States",
-        "State_political_office-holders_in_the_United_States",
-        "State_legislatures_of_the_United_States",
-        "State_legislators_of_the_United_States",
-        "Speakers of state legislatures in the United States"
+#        "State_political_office-holders_in_the_United_States",
+#        "State_legislatures_of_the_United_States",
+#        "State_legislators_of_the_United_States",
+#        "Speakers of state legislatures in the United States"
         ) :
         cat = catlib.Category(site, x)
         pages = cat.articlesList(recurse = True)

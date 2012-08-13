@@ -10,17 +10,14 @@ for infile in glob.glob( os.path.join(path, '*') ):
     print "current file is: " + infile
     match = re.search(r'(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)',infile)
     match = re.search(r'w\-(\d+)\-wiki',infile)
-#    match = re.search(r'.+(dddddddddddddd).+',infile)
-#    match = re.search(r'.+(\dddddddddddddd).+',infile)
     if (match) :
         print "match %s" % match
         print "g1 %s" % match.group(1)
-#        print "g0 %s" % match.group(0)
         ts=match.group(1)
         fn="enwikipediaorg_w-%s-wikidump/enwikipediaorg_w-%s-history.xml" % (ts, ts)
         pn="enwikipediaorg_w-%s-wikidump*" % (ts)
         zn="wtarchive%s*" % (ts)
-        cmd = "python ../speedydeletion.py ./%s" % fn
+        cmd = "python ../stategovernmentsintheunitedstates.py ./%s" % fn
         print cmd
         stat=os.system(cmd)
         print stat
