@@ -667,7 +667,9 @@ def getParameters(params=[]):
             config['api'] = a
 
         elif o in ("--category"):
+            a  = re.sub(r'^\"(.*)\"$', lambda pat: pat.group(1)  , a)
             print "adding category %s" % a
+#            exit (100);
             config['categories'].append(a)
 
         elif o in ("--index"):
