@@ -133,12 +133,12 @@ def getNamespaces(config={}):
 
 
 
-def getTitles(site, categories):
+def getTitles(site, categories, recurse):
     titles = []
     for x in  categories :
-        print "Going to get category %s" % categories
+        print "Going to get category: %s" % x
         cat = catlib.Category(site, x)
-        pages = cat.articlesList(recurse = True)
+        pages = cat.articlesList(recurse)
         for x in pages :
             n = x.urlname()
             an = n.encode("ascii","ignore")
@@ -151,7 +151,7 @@ def getPageTitlesAPI(config={} ):
     """ Uses the API to get the list of page titles """
     titles = []
     site = pywikibot.getSite()
-    titles += getTitles(site,config['categories'])
+    titles += getTitles(site,config['categories'],config['recurse'])
     return titles
 
 def getPageTitlesScrapper(config={}):
@@ -629,6 +629,7 @@ def getParameters(params=[]):
         'namespaces': ['all'],
         'exnamespaces': [],
         'categories' : [],
+        'recurse': True,
         'path': '',
         'delay': 0,
     }
@@ -643,6 +644,8 @@ def getParameters(params=[]):
                                                 "xml", "curonly", 
                                                 "resume", "delay=", "namespaces=", "exnamespaces=", 
                                                 "category=",
+                                                "categoryFile=",
+                                                'norecurse',
                                                 "force", ])
     except getopt.GetoptError, err:
         # print help information and exit:
@@ -653,6 +656,10 @@ def getParameters(params=[]):
         if o in ("-h","--help"):
             usage()
             sys.exit()
+
+        elif o in ("--norecurse"):
+            config["recurse"] = False
+
         elif o in ("--path"):
             config["path"] = a
             while len(config["path"])>0:
@@ -669,8 +676,16 @@ def getParameters(params=[]):
         elif o in ("--category"):
             a  = re.sub(r'^\"(.*)\"$', lambda pat: pat.group(1)  , a)
             print "adding category %s" % a
-#            exit (100);
             config['categories'].append(a)
+
+        elif o in ("--categoryFile"):
+            f = open (a)
+            for a in f.readlines():
+                a  = a.rstrip("\n\r") # chomp
+                a  = re.sub(r'^\"(.*)\"$', lambda pat: pat.group(1)  , a)
+                print "adding category %s" % a
+                config['categories'].append(a)
+            f.close()
 
         elif o in ("--index"):
             if not a.startswith('http://') and not a.startswith('https://'):
