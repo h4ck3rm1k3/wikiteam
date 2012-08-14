@@ -8,6 +8,7 @@ import config, pagegenerators, catlib
 import replace
 import xmlreader
 
+
 from shove import Shove
 file_store = Shove('file://wikiaupload')
 
@@ -22,6 +23,9 @@ signal.signal(signal.SIGINT, signal_handler)
 import subprocess    
 
 def main(*args):
+
+    print "ARGS:%s\n" % sys.argv
+
     genFactory = pagegenerators.GeneratorFactory()
     # If xmlfilename is None, references will be loaded from the live wiki.
     xmlfilename = None
@@ -44,10 +48,13 @@ def main(*args):
         print "cannot open %s\n" % xmlfilename
         exit (0)
 
-    tempfile = "%s.tmp" % xmlfilename
-
-    status = subprocess.call("xmllint --recover  %s -o %s" % (xmlfilename,tempfile) , shell=True)
-    print "status %d\n" % status
+    if sys.argv[1] == "--validate" :
+        tempfile = "%s.tmp" % xmlfilename
+        status = subprocess.call("xmllint --recover  %s -o %s" % (xmlfilename,tempfile) , shell=True)
+        print "status %d\n" % status
+    else:
+        tempfile = xmlfilename
+        
 
     dump = xmlreader.XmlDump(tempfile)
     count = 0
