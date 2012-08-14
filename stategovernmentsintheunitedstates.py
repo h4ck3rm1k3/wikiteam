@@ -97,10 +97,13 @@ def main(*args):
                     pywikibot.output(u'is not there, adding  %s' % entry.title)
                     contents = entry.text
                     usernames = entry.username
-                    if re.search('Template:', title):
-                        contents = contents +  "<noinclude>{{wikipedia-template|%s}}</noinclude>" % usernames
+		    if re.search('Template:', title):
+			    contents = contents +  "<noinclude>{{wikipedia-template|%s}}</noinclude>" % usernames
                     else:
-                        contents = contents +  "\n{{wikipedia|%s}}" % usernames
+			    print "going to add wikipedia to title %s" % title
+			    exit(99);
+			    #contents = contents +  "\n{{wikipedia|%s}}" % usernames
+
                     outpage._site=outsite
                     outpage.put(contents)
                 try :

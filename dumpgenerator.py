@@ -130,39 +130,28 @@ def getNamespaces(config={}):
     namespaces = [i for i in set(namespaces)] #uniques
 #    print '%d namespaces found' % (len(namespaces))
     return namespaces, namespacenames
-  
 
-#        "Kansas_Legislature",
-#        "Members_of_the_Kansas_Legislature"
-#        "Government_of_Kansas"
-#        "Members_of_the_Kansas_House_of_Representatives"     ,   
-#        "Members_of_state_lower_houses_in_the_United_States",        
 
-def getTitles(site):
+
+def getTitles(site, categories):
     titles = []
-    for x in (        
-        "State_lower_houses_in_the_United_States",
-#        "State_political_office-holders_in_the_United_States",
-#        "State_legislatures_of_the_United_States",
-#        "State_legislators_of_the_United_States",
-#        "Speakers of state legislatures in the United States"
-        ) :
+    for x in  categories :
+        print "Going to get category %s" % categories
         cat = catlib.Category(site, x)
         pages = cat.articlesList(recurse = True)
         for x in pages :
             n = x.urlname()
             an = n.encode("ascii","ignore")
-#            if (isNewTitle(an)):
             titles +=  [n]
 
     return titles
 
 
-def getPageTitlesAPI(config={}):
+def getPageTitlesAPI(config={} ):
     """ Uses the API to get the list of page titles """
     titles = []
     site = pywikibot.getSite()
-    titles += getTitles(site)
+    titles += getTitles(site,config['categories'])
     return titles
 
 def getPageTitlesScrapper(config={}):
@@ -639,6 +628,7 @@ def getParameters(params=[]):
         'xml': True,
         'namespaces': ['all'],
         'exnamespaces': [],
+        'categories' : [],
         'path': '',
         'delay': 0,
     }
@@ -649,7 +639,11 @@ def getParameters(params=[]):
     }
     #console params
     try:
-        opts, args = getopt.getopt(params, "", ["h", "help", "path=", "api=", "index=", "xml", "curonly", "resume", "delay=", "namespaces=", "exnamespaces=", "force", ])
+        opts, args = getopt.getopt(params, "", ["h", "help", "path=", "api=", "index=", 
+                                                "xml", "curonly", 
+                                                "resume", "delay=", "namespaces=", "exnamespaces=", 
+                                                "category=",
+                                                "force", ])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -671,6 +665,11 @@ def getParameters(params=[]):
                 print 'api.php must start with http:// or https://'
                 sys.exit()
             config['api'] = a
+
+        elif o in ("--category"):
+            print "adding category %s" % a
+            config['categories'].append(a)
+
         elif o in ("--index"):
             if not a.startswith('http://') and not a.startswith('https://'):
                 print 'index.php must start with http:// or https://'
