@@ -55,7 +55,7 @@ def main(*args):
         if  re.search("^Main Page" , entry.title):
             pywikibot.output(u'skipping %s' % entry.title)
             continue
-        pywikibot.output(u'Considering %s' % entry.title)
+#        pywikibot.output(u'Considering %s' % entry.title)
         try :
             if (file_store[title] ) :
                 count = count +1

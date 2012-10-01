@@ -55,7 +55,7 @@ def isNewTitle(name):
 
     try :
         if (file_store[name] ) :
-            print "Skipping %s" % name
+#            print "Skipping %s" % name
             return 0
         else:
             return 1

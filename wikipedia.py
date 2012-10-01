@@ -794,16 +794,27 @@ not supported by PyWikipediaBot!"""
         if not 'pages' in data['query']:
             raise RuntimeError("API query error, no pages found: %s" % data)
         pageInfo = data['query']['pages'].values()[0]
+
+        print pageInfo
+        #{u'lastrevid': 0,
+        # u'pageid': 151564, 
+        #u'title': u'Template:Hist-novel-stub', 
+        #u'counter': u'', 
+        #u'length': 0, 
+        #u'protection': [], u'touched': u'2012-08-08T13:25:25Z', u'new': u'', u'ns': 10}
+
         if data['query']['pages'].keys()[0] == "-1":
             if 'missing' in pageInfo:
                 raise NoPage(self.site(), unicode(self),
 "Page does not exist. In rare cases, if you are certain the page does exist, look into overriding family.RversionTab")
             elif 'invalid' in pageInfo:
                 raise BadTitle('BadTitle: %s' % self)
+
         elif 'revisions' in pageInfo: #valid Title
             lastRev = pageInfo['revisions'][0]
             if isinstance(lastRev['*'], basestring):
                 textareaFound = True
+
         # I got page date with 'revisions' in pageInfo but
         # lastRev['*'] = False instead of the content. The Page itself was
         # deleted but there was not 'missing' in pageInfo as expected
@@ -811,7 +822,8 @@ not supported by PyWikipediaBot!"""
         if not textareaFound:
             if verbose:
                 print pageInfo
-            raise ServerError('ServerError: No textarea found in %s' % self)
+            return "error";
+         #   raise ServerError('ServerError: No textarea found in %s' % self)
 
         self.editRestriction = ''
         self.moveRestriction = ''
