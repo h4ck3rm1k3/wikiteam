@@ -8,10 +8,24 @@ import config, pagegenerators, catlib
 import replace
 import xmlreader
 
+
 from shove import Shove
 file_store = Shove('file://wikiaupload')
 
+import signal
+import sys
+def signal_handler(signal, frame):
+        print 'You pressed Ctrl+C!'
+        sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
+
+
+import subprocess    
+
 def main(*args):
+
+    print "ARGS:%s\n" % sys.argv
+
     genFactory = pagegenerators.GeneratorFactory()
     # If xmlfilename is None, references will be loaded from the live wiki.
     xmlfilename = None
@@ -26,8 +40,6 @@ def main(*args):
     importsite = "speedydeletion"
     outsite = pywikibot.getSite("en",importsite)
     outsite.forceLogin()
-    dump = xmlreader.XmlDump(xmlfilename)
-    count = 0
 
     try :
         print "try to open %s\n" % xmlfilename
@@ -36,9 +48,20 @@ def main(*args):
         print "cannot open %s\n" % xmlfilename
         exit (0)
 
+    if sys.argv[1] == "--validate" :
+        tempfile = "%s.tmp" % xmlfilename
+        status = subprocess.call("xmllint --recover  %s -o %s" % (xmlfilename,tempfile) , shell=True)
+        print "status %d\n" % status
+    else:
+        tempfile = xmlfilename
+        
+
+    dump = xmlreader.XmlDump(tempfile)
+    count = 0
+    
     for entry in dump.parse():
 #        print  file_store[entry.title] 
-        title=entry.title.encode("ascii","ignore")
+        title=entry.title.encode("utf8","ignore")
 
         if  re.search("^Wikipedia:" , entry.title):
             pywikibot.output(u'skipping %s' % entry.title)
@@ -56,7 +79,16 @@ def main(*args):
             pywikibot.output(u'skipping %s' % entry.title)
             continue
 #        pywikibot.output(u'Considering %s' % entry.title)
+        title = title.replace(":","_")
+        title = title.replace("!","_")
+        title = title.replace("/","_")
+        title = title.replace("\\","_")
+
         try :
+            if (len(title) < 1):
+                pywikibot.output(u'empty title:%s' % entry.title)
+                continue;
+
             if (file_store[title] ) :
                 count = count +1
             else:
@@ -64,12 +96,15 @@ def main(*args):
         except KeyError :
             try :
                 outpage = pywikibot.Page(site=outsite, title=entry.title, insite=outsite)
+
+                
                 if outpage.exists():
-                    pywikibot.output(u'there is an article %s' % entry.title)
+                    #pywikibot.output(u'there is an article %s' % entry.title)
                     try:
                         file_store[title] = 1
                     except  KeyError :
-                        pywikibot.output(u'key error saving article %s' % entry.title)                           
+                        pywikibot.output(u'key error saving article %s transformed to %s' % (entry.title , title) )                           
+
                 else:
                     pywikibot.output(u'is not there, adding  %s' % entry.title)
                     contents = entry.text
@@ -82,10 +117,29 @@ def main(*args):
                     outpage.put(contents)
                 try :
                     file_store[title] = 1
-                except:
+                except KeyboardInterrupt:
+                    print "Bye"
+                    sys.exit()
+
+                except KeyError:
                     pywikibot.output(u'could not save %s! to the list of article' % entry.title)
+
+
+            except KeyboardInterrupt:
+                print "Bye"
+                sys.exit()
+            except KeyError:
+                pywikibot.output(u'problem with  %s! ' % entry.title)
+
             finally:
                 count = count + 1
+
+        except KeyboardInterrupt:
+            print "Bye"
+            sys.exit()
+        except KeyError:
+            pywikibot.output(u'problem2 with  %s! ' % entry.title)
+
         finally:
             count = count + 1
 
@@ -94,3 +148,6 @@ if __name__ == "__main__":
         main()
     finally:
         pywikibot.stopme()
+
+##See also 
+# http://stackoverflow.com/questions/1112343/how-do-i-capture-sigint-in-python

@@ -8,9 +8,22 @@ use MediaWiki::API;
  sub EditPage {
      my $mw=shift;
      my $pagename = shift;
-     $mw->edit( {
-	 action => 'delete', title => $pagename, reason => 'Attack Pages' } )
-	 || warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+     my $ok =$mw->edit( { action => 'delete', title => $pagename, reason => 'Attack Pages' } )	 ;
+
+     if ($ok)	 {
+	 warn "$pagename deleted\n";
+     }  else     {
+	 if (
+	     ($mw->{error}->{code} != 5)
+	     &&
+	     ($mw->{error}->{code} != 3)
+	     )
+	 { #Page does not exist
+	     warn $mw->{error}->{code} . ': ' . $mw->{error}->{details} ;
+	 }
+	 
+     }
+
     
  }
 
@@ -59,7 +72,7 @@ cmcategory => $cat,
 	
 	# and print the article titles
 	foreach (@{$articles}) {
-	    print "going to delete $_->{title}\n";
+	    #print "going to delete $_->{title}\n";
 	    EditPage $mw2, $_->{title};
 	}
     }
