@@ -97,8 +97,13 @@ def main(*args):
             try :
                 outpage = pywikibot.Page(site=outsite, title=entry.title, insite=outsite)
 
-                
-                if outpage.exists():
+		exists =False
+                try:
+			exists = outpage.exists()
+		except :
+			pywikibot.output(u'key error exiting article %s transformed to %s' % (entry.title , title) )                           
+
+                if exists :
                     #pywikibot.output(u'there is an article %s' % entry.title)
                     try:
                         file_store[title] = 1
@@ -114,7 +119,10 @@ def main(*args):
                     else:
                         contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
                     outpage._site=outsite
-                    outpage.put(contents)
+		    try :
+			    outpage.put(contents)
+		    except :
+                        pywikibot.output(u'cannot put article %s / %s' % (entry.title , title) )                           
                 try :
                     file_store[title] = 1
                 except KeyboardInterrupt:
