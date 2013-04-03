@@ -361,8 +361,12 @@ Consider installing the python-celementtree package.''')
         timestamp = revision.findtext("{%s}timestamp" % self.uri)
         comment = revision.findtext("{%s}comment" % self.uri)
         contributor = revision.find("{%s}contributor" % self.uri)
-        ipeditor = contributor.findtext("{%s}ip" % self.uri)
-        username = ipeditor or contributor.findtext("{%s}username" % self.uri)
+        if contributor:
+            ipeditor = contributor.findtext("{%s}ip" % self.uri)
+            username = ipeditor or contributor.findtext("{%s}username" % self.uri)
+        else:
+            ipeditor =  "unknown"
+            username = "unknown"
         # could get comment, minor as well
         text = revision.findtext("{%s}text" % self.uri)
         return XmlEntry(title=self.title,

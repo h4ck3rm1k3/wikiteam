@@ -20,7 +20,7 @@ for infile in glob.glob( os.path.join(path, '*') ):
         fn="enwikipediaorg_w-%s-wikidump/enwikipediaorg_w-%s-history.xml" % (ts, ts)
         pn="enwikipediaorg_w-%s-wikidump*" % (ts)
         zn="wtarchive%s*" % (ts)
-        cmd = "python ../speedydeletion.py ./%s" % fn
+        cmd = "python ../speedydeletion.py --validate ./%s" % fn
         print cmd
         stat=os.system(cmd)
         print stat
