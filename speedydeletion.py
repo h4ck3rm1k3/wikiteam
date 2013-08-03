@@ -19,6 +19,26 @@ def signal_handler(signal, frame):
         sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 
+import unicodedata
+
+def decode(link) :
+    b = link
+    link = unicode(link, 'utf-8')
+    link = unicodedata.normalize('NFKD', link)
+    return strip(link)
+
+def decodeuc(link) :
+    b = link
+    link = unicode(link)
+    link = unicodedata.normalize('NFKD', link)
+    return strip(link)
+
+
+def strip(link) :
+    b = link
+    link = link.encode('ascii','ignore')
+    return link
+
 
 import subprocess    
 
@@ -83,7 +103,7 @@ def main(*args):
         title = title.replace("!","_")
         title = title.replace("/","_")
         title = title.replace("\\","_")
-
+	title = decode(title)
         try :
             if (len(title) < 1):
                 pywikibot.output(u'empty title:%s' % entry.title)
