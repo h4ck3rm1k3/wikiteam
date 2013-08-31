@@ -84,19 +84,19 @@ def main(*args):
         title=entry.title.encode("utf8","ignore")
 
         if  re.search("^Wikipedia:" , entry.title):
-            pywikibot.output(u'skipping %s' % entry.title)
+#            pywikibot.output(u'skipping %s' % entry.title)
             continue
         if  re.search("^User:" , entry.title):
-            pywikibot.output(u'skipping %s' % entry.title)
+#            pywikibot.output(u'skipping %s' % entry.title)
             continue
         if  re.search("^User Talk:" , entry.title):
-            pywikibot.output(u'skipping %s' % entry.title)
+#            pywikibot.output(u'skipping %s' % entry.title)
             continue
         if  re.search(".css$" , entry.title):
-            pywikibot.output(u'skipping %s' % entry.title)
+#            pywikibot.output(u'skipping %s' % entry.title)
             continue
         if  re.search("^Main Page" , entry.title):
-            pywikibot.output(u'skipping %s' % entry.title)
+#            pywikibot.output(u'skipping %s' % entry.title)
             continue
 #        pywikibot.output(u'Considering %s' % entry.title)
         title = title.replace(":","_")
