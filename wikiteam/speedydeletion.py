@@ -9,16 +9,13 @@ import replace
 import xmlreader
 
 
-from shove import Shove
-file_store = Shove('file://wikiaupload')
-
 import signal
 import sys
 def signal_handler(signal, frame):
         print 'You pressed Ctrl+C!'
         sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
-
+pywikibot.setAction("Speedydeletion realtime Bot")
 import unicodedata
 
 def decode(link) :
@@ -41,6 +38,61 @@ def strip(link) :
 
 
 import subprocess    
+
+class SpeedyDeletion :
+        def __init__(self):
+                importsite = "speedydeletion"
+                self.site = pywikibot.getSite("en",importsite)
+                self.site.forceLogin()
+
+        def push(self,page , usernames, contents):
+                title= page.title()
+                #print "push BEGIN%sEND" % title
+                # if  re.search(r'^Wikipedia:' , title):
+                #         return
+                # elif  re.search("^User:" , title):
+                #         return
+                # elif  re.search("^User Talk:" , title):
+                #         return
+                # elif  re.search(".css$" , title):
+                #         return
+                # elif  re.search("^Main Page" , title):
+                #         return 
+                
+#                title = title.replace(":","_")
+                title = title.replace("!","_")
+                title = title.replace("/","_")
+                title = title.replace("\\","_")
+                #title = decode(title)
+                if (len(title) < 1):
+                        pywikibot.output(u'empty title:%s' % entry.title)
+                        return
+
+                outpage = pywikibot.Page(
+                        site=self.site, 
+                        title=title, 
+                        insite=self.site)
+                try:
+			exists = outpage.exists()
+		except :
+			pywikibot.output(u'key error exiting article %s transformed to %s' % (entry.title , title) )                           
+
+                pywikibot.output(u'is not there, adding  %s' % title)
+
+                if re.search('Template:', title):
+                        contents = contents +  "<noinclude>{{wikipedia-template|%s}}</noinclude>" % usernames
+                else:
+                        contents = contents +  "\n{{wikipedia-deleted|%s}}" % usernames
+                outpage._site=self.site
+                try :
+                        outpage.put(contents)
+                except :
+                        pywikibot.output(u'cannot put article %s / %s' % (page.title() , title) )                           
+
+        def proc(self,pagename,user,timev,timeo, comment,content):
+                #print pagename,timev,timeo, comment,content
+                pywikibot.setAction("Speedydeletion Real-Time Bot, changes from %s with comment %s" % (user,comment))
+                self.push(pagename,user,content)
 
 def main(*args):
 

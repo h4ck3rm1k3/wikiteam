@@ -22,9 +22,9 @@ __version__='$Id: pagegenerators.py 10218 2012-05-16 15:10:55Z xqt $'
 
 import wikipedia as pywikibot
 import re
-import time
 from time import sleep
 from dateutil import parser
+import speedydeletion
 
 parameterHelp = u"""\
 -recentchangessince
@@ -134,68 +134,88 @@ def RecentchangesSincePageGenerator(since=None, site=None):
         rctype = 'edit',
         #rcprop = ['user','comment','timestamp','title','ids','loginfo','sizes']
     ):
-#      print item
+      #      print item
       yield item
 
 
 prog = re.compile(r'(delete|deletion|Afd)', re.IGNORECASE)
     
+class Processor :
+  def __init__(self):
+    pass
 
-def process_page(page):
-  timev=page[1]
-  #length=page[2]
-  #user=page[4]
-  comment=page[5]
-  pagename=page[0]
-  timeo=parser.parse(timev)
-  result = prog.search(comment) 
-  if result :
-    print "\t",pagename,timev,timeo, comment
-#  else:
-#    print "\tSKIP\t",pagename,time,timeo, comment
-  return (timeo,timev)
+  def process_page(self,page):
+    timev=page[1]
+    #length=page[2]
+    user=page[4]
+    comment=page[5]
+    pagename=page[0]
+    timeo=parser.parse(timev)
+    result = prog.search(comment) 
+    if result :
+      #      print "\tgetting",pagename,timev,timeo, comment
+      content=pagename.get()
+      #  print "\tgot",content
+      self.out.proc(pagename,user,timev,timeo, comment,content)
+      #  else:
+      #    print "\tSKIP\t",pagename,time,timeo, comment
+    return (timeo,timev)
 
-def process_until(starttimeo, starttimev):
-  i=0
-  #starttimeo=parser.parse(starttime)
-  while (True):
-    print "Looking back to %s " % starttimev
-    gen = RecentchangesSincePageGenerator(since = starttimev)
+
+  def process_until(self,starttimeo, starttimev):
+    i=0
+    #starttimeo=parser.parse(starttime)
+    while (True):
+        print "Looking back to %s " % starttimev
+        gen = RecentchangesSincePageGenerator(since = starttimev)
+        for page in gen:
+          i+=1
+          if isinstance(page, (list, tuple)):
+            data= self.process_page(page)
+            if data is None:
+              return None
+            else:
+              (timeo,timev) = data
+          if timeo < starttimeo :
+            return timev
+
+  def process_continue(self,last_timev):
+    gen = RecentchangesSincePageGenerator()
+    maxtime = None
+    i=0
     for page in gen:
       i+=1
       if isinstance(page, (list, tuple)):
-        (timeo,timev) = process_page(page)
-      if timeo < starttimeo :
-        return timev
 
-def process_continue(last_timev):
-  gen = RecentchangesSincePageGenerator()
-  maxtime = None
-  i=0
-  for page in gen:
-    i+=1
-    if isinstance(page, (list, tuple)):
-      (timeo,timev)= process_page(page)
+        data= self.process_page(page)
+        if data is None:
+          return None
+        else:
+          (timeo,timev) = data
 
-      if maxtime is None:
-        maxtime=timeo
-        maxtimev=timev
-      elif timeo > maxtime :
-        maxtime=timeo
-        maxtimev=timev
+        if maxtime is None:
+          maxtime=timeo
+          maxtimev=timev
+        elif timeo > maxtime :
+          maxtime=timeo
+          maxtimev=timev
 
-      if last_timev is not None:
-        if timev < last_timev:
-          print "up to date for %s %s" % (timev, timeo)
-          return maxtime, maxtimev
+        if last_timev is not None:
+          if timev < last_timev:
+            print "up to date for %s %s" % (timev, timeo)
+            return maxtime, maxtimev
 
-  return maxtime, maxtimev
+    return maxtime, maxtimev
 
 
 def main(*args):
 
-  print args
-#  since = "2013-09-15T00:00:01Z"
+  in_proc=Processor()
+  out_proc=speedydeletion.SpeedyDeletion()
+  in_proc.out=out_proc
+
+  #print args
+  #  since = "2013-09-15T00:00:01Z"
   since = ""
   #maxtime=None
   last_time=None
@@ -204,14 +224,19 @@ def main(*args):
 
   while (True):
     print "restarting with %s" % since
-    (new_last_time,new_last_timev)= process_continue(last_timev)
+
+    data = in_proc.process_continue(last_timev)
+    if data is None :
+      raise Exception("bla")
+      
+    (new_last_time,new_last_timev) =data
     print "got up to  %s %s" % (new_last_time,new_last_timev)
 
     if last_time is None :
       last_time=new_last_time
       last_timev=new_last_timev
     else:
-      final_time =process_until(last_time, last_timev)
+      final_time =in_proc.process_until(last_time, last_timev)
       print "now got up to  %s" % final_time
       last_time=new_last_time
       last_timev=new_last_timev
