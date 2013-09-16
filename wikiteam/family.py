@@ -3790,6 +3790,9 @@ class Family:
     def isDefinedNS(self, ns_number):
         """Return True if the namespace has been defined in this family.
         """
+        if  ns_number not in self.namespaces:
+            print self.namespaces.keys()
+
         return ns_number in self.namespaces
 
     def isNsI18N(self, ns_number, code):

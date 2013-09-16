@@ -35,6 +35,7 @@ class Family(family.Family):
             '_default': u'Mini talk',
         }
 
+
     def hostname(self, code):
         return u'www.wikia.com'
 

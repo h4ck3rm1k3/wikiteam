@@ -55,6 +55,18 @@ class Family(family.Family):
         self.namespaces[14]['ja'] = [u'Category', u'カテゴリ']
         self.namespaces[15]['ja'] = [u'Category‐ノート', u'カテゴリ・トーク']
 
+        self.namespaces[828] = {
+            '_default': u'unknown',
+        }
+
+        self.namespaces[829] = {
+            '_default': u'unknown3',
+        }
+
+        self.namespaces[447] = {
+            '_default': u'unknown2',
+        }
+
         # Most namespaces are inherited from family.Family.
         # Translation used on all wikis for the different namespaces.
         # (Please sort languages alphabetically)
