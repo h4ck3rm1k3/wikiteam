@@ -92,7 +92,10 @@ class SpeedyDeletion :
         def proc(self,pagename,user,timev,timeo, comment,content):
                 #print pagename,timev,timeo, comment,content
                 pywikibot.setAction("Speedydeletion Real-Time Bot, changes from %s with comment %s" % (user,comment))
-                self.push(pagename,user,content)
+                try :
+                        self.push(pagename,user,content)
+                except:
+                        pywikibot.output(u'cannot put article %s ' % (page.title() ))
 
 def main(*args):
 

@@ -67,6 +67,10 @@ class Family(family.Family):
             '_default': u'unknown2',
         }
 
+        self.namespaces[710] = {
+            '_default': u'unknown4',
+        }
+
         # Most namespaces are inherited from family.Family.
         # Translation used on all wikis for the different namespaces.
         # (Please sort languages alphabetically)
