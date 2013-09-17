@@ -74,7 +74,7 @@ class GeneratorFactory(object):
           name ='-recentchangessince'
 
           since=(arg[len(name)+1:])
-          print "Since:%s" % since
+          pywikibot.output("Since:%s" % since)
           self.gen = RecentchangesSincePageGenerator(since = since)
           return self.gen
 
@@ -158,8 +158,8 @@ class Processor :
         #    print "\tSKIP\t",pagename,time,timeo, comment
         return (timeo,timev)
       except Exception, e:
-        print e
-        print "\tSKIP error\t",pagename,time,timeo, comment
+        pywikibot.output( e)
+        pywikibot.output("\tSKIP error\t",pagename,time,timeo, comment)
         return (timeo,timev)
     else:
       return (timeo,timev)
@@ -169,7 +169,7 @@ class Processor :
     i=0
     #starttimeo=parser.parse(starttime)
     while (True):
-        print "Looking back to %s " % starttimev
+        pywikibot.output( "Looking back to %s " % starttimev)
         gen = RecentchangesSincePageGenerator(since = starttimev)
         for page in gen:
           i+=1
@@ -190,10 +190,10 @@ class Processor :
       i+=1
 
       if isinstance(page, (list, tuple)):
-        print page
+        #print page
         data= self.process_page(page)
         if data is None:
-          print "data is none for" + str(page)
+          #print "data is none for" + str(page)
           return None
         else:
           (timeo,timev) = data
@@ -207,7 +207,7 @@ class Processor :
 
         if last_timev is not None:
           if timev < last_timev:
-            print "up to date for %s %s" % (timev, timeo)
+            pywikibot.output("up to date for %s %s" % (timev, timeo))
             return maxtime, maxtimev
       else:
         raise Exception("single page")
@@ -229,7 +229,7 @@ def main(*args):
   #i = 0
 
   while (True):
-    print "restarting with %s" % since
+    pywikibot.output( "restarting with %s" % since)
 
     data = in_proc.process_continue(last_timev)
     if data is None :
@@ -237,14 +237,14 @@ def main(*args):
       continue
       
     (new_last_time,new_last_timev) =data
-    print "got up to  %s %s" % (new_last_time,new_last_timev)
+    pywikibot.output( "got up to  %s %s" % (new_last_time,new_last_timev))
 
     if last_time is None :
       last_time=new_last_time
       last_timev=new_last_timev
     else:
       final_time =in_proc.process_until(last_time, last_timev)
-      print "now got up to  %s" % final_time
+      pywikibot.output( "now got up to  %s" % final_time)
       last_time=new_last_time
       last_timev=new_last_timev
 

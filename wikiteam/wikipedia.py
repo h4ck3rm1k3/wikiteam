@@ -280,7 +280,7 @@ class Page(object):
             # Convert HTML entities to unicode
             t = html2unicode(title)
             if not t:
-                print u"Invalid title3 '%s'" % title 
+                output( u"Invalid title3 '%s'" % title )
                 raise InvalidTitle(u"Invalid title '%s'" % title )
 
             # Convert URL-encoded characters to unicode
@@ -795,7 +795,7 @@ not supported by PyWikipediaBot!"""
             raise RuntimeError("API query error, no pages found: %s" % data)
         pageInfo = data['query']['pages'].values()[0]
 
-        print pageInfo
+        #print pageInfo
         #{u'lastrevid': 0,
         # u'pageid': 151564, 
         #u'title': u'Template:Hist-novel-stub', 
@@ -821,7 +821,7 @@ not supported by PyWikipediaBot!"""
         # I raise a ServerError() yet, but maybe it should be NoPage().
         if not textareaFound:
             if verbose:
-                print pageInfo
+                output( pageInfo)
             return "error";
          #   raise ServerError('ServerError: No textarea found in %s' % self)
 
@@ -929,7 +929,7 @@ not supported by PyWikipediaBot!"""
                     if "<title>Wikimedia Error</title>" in text:
                         output( u"Wikimedia has technical problems; will retry in %i minutes." % retry_idle_time)
                     else:
-                        output( unicode(text) )
+                        output( "error text:" + unicode(text) )
                         # We assume that the server is down. Wait some time, then try again.
                         output( u"WARNING: No text area found on %s%s. Maybe the server is down. Retrying in %i minutes..." % (self.site().hostname(), path, retry_idle_time) )
                     time.sleep(retry_idle_time * 60)
@@ -1040,8 +1040,8 @@ not supported by PyWikipediaBot!"""
                                        self.latestRevision())
 
     def latestRevision(self):
-        print "latestRevision"
-        """Return the current revision id for this page."""
+        output( "latestRevision"
+        """Return the current revision id for this page.""")
         if not self._permalink:
             # When we get the page with getall, the permalink is received
             # automatically
@@ -2151,7 +2151,7 @@ u'Page %s is semi-protected. Getting edit page to find out if we are allowed to 
                         # server lag; Mediawiki recommends waiting 5 seconds
                         # and retrying
                         if verbose:
-                            output(data, newline=False)
+                            output("Data:" + data, newline=False)
                         output(u"Pausing %d seconds due to database server lag." % wait)
                         dblagged = True
                         time.sleep(wait)
@@ -4144,7 +4144,7 @@ class _GetAll(object):
                 if 'normalized' in data['query']:
                     self._norm = dict([(x['from'],x['to']) for x in data['query']['normalized']])
                 for vals in data['query']['pages'].values():
-                    print "Check %s" % vals
+                    output( "Check %s" % vals)
                     self.oneDoneApi(vals)
             else: #read pages via Special:Export
                 while True:
@@ -4312,14 +4312,14 @@ class _GetAll(object):
     def getData(self):
         address = self.site.export_address()
         pagenames = [page.sectionFreeTitle() for page in self.pages]
-        print "pagenames %s" % pagenames
+        output( "pagenames %s" % pagenames)
         # We need to use X convention for requested page titles.
         if self.site.lang == 'eo':
             pagenames = [encodeEsperantoX(pagetitle) for pagetitle in pagenames]
         pagenames = u'\r\n'.join(pagenames)
         if type(pagenames) is not unicode:
             output(u'Warning: xmlreader.WikipediaXMLHandler.getData() got non-unicode page names. Please report this.')
-            print pagenames
+            output( pagenames)
         # convert Unicode string to the encoding used on that wiki
         pagenames = pagenames.encode(self.site.encoding())
         predata = {
@@ -4343,7 +4343,7 @@ class _GetAll(object):
 
     def oneDoneApi(self, data):        
         title = data['title']
-        print data
+        output( data)
         if not ('missing' in data or 'invalid' in data):
             revisionId = data['lastrevid']
             rev = None
@@ -4506,7 +4506,7 @@ def getall(site, pages, throttle=True, force=False):
 
     """
     # TODO: why isn't this a Site method?
-    print "HELP!"
+    output( "HELP!")
     traceback.print_exc(file=sys.stdout)
     pages = list(pages)  # if pages is an iterator, we need to make it a list
     data = []
@@ -4831,7 +4831,7 @@ def Family(fam=None, fatal=True, force=False):
 
     try:
         print config.datafilepath('families')
-        print fam
+        #output( fam)
         # search for family module in the 'families' subdirectory
         sys.path.append(config.datafilepath('families'))
         myfamily = __import__('%s_family' % fam)
@@ -5030,7 +5030,7 @@ class Site(object):
         @type user: str
 
         """
-        print "check %s" % code 
+        #output( "check %s" % code )
         self.__code = code.lower()
         if isinstance(fam, basestring) or fam is None:
             self.__family = Family(fam, fatal = False)
@@ -5046,7 +5046,7 @@ class Site(object):
                 raise NoSuchSite("Language %s in family %s is obsolete"
                                  % (self.__code, self.__family.name))
         if self.__code not in self.languages():
-            print self.languages()
+            output( self.languages())
             if self.__code == 'zh-classic' \
                and 'zh-classical' in self.languages():
                 self.__code = 'zh-classical'
@@ -8090,6 +8090,7 @@ def output(text, decoder=None, newline=True, toStdout=False, **kwargs):
     e. g. \03{lightpurple}. \03{default} resets the color.
 
     """
+#    traceback.print_stack()
     output_lock.acquire()
     try:
         if decoder:
