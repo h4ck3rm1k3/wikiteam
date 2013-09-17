@@ -93,11 +93,7 @@ class GeneratorFactory(object):
                 if user:
                     result = user.split(';')
                     user = result[0]
-                    #try:
-                        #not used number = int(result[1])
-                    # 
-                    #except:
-                    #    pass
+
 
         if gen:
             return gen
@@ -153,13 +149,20 @@ class Processor :
     timeo=parser.parse(timev)
     result = prog.search(comment) 
     if result :
-      #      print "\tgetting",pagename,timev,timeo, comment
-      content=pagename.get()
-      #  print "\tgot",content
-      self.out.proc(pagename,user,timev,timeo, comment,content)
-      #  else:
-      #    print "\tSKIP\t",pagename,time,timeo, comment
-    return (timeo,timev)
+      try:
+        #      print "\tgetting",pagename,timev,timeo, comment
+        content=pagename.get()
+        #  print "\tgot",content
+        self.out.proc(pagename,user,timev,timeo, comment,content)
+        #  else:
+        #    print "\tSKIP\t",pagename,time,timeo, comment
+        return (timeo,timev)
+      except Exception, e:
+        print e
+        print "\tSKIP error\t",pagename,time,timeo, comment
+        return (timeo,timev)
+    else:
+      return (timeo,timev)
 
 
   def process_until(self,starttimeo, starttimev):
@@ -185,10 +188,12 @@ class Processor :
     i=0
     for page in gen:
       i+=1
-      if isinstance(page, (list, tuple)):
 
+      if isinstance(page, (list, tuple)):
+        print page
         data= self.process_page(page)
         if data is None:
+          print "data is none for" + str(page)
           return None
         else:
           (timeo,timev) = data
@@ -204,7 +209,8 @@ class Processor :
           if timev < last_timev:
             print "up to date for %s %s" % (timev, timeo)
             return maxtime, maxtimev
-
+      else:
+        raise Exception("single page")
     return maxtime, maxtimev
 
 
@@ -228,6 +234,7 @@ def main(*args):
     data = in_proc.process_continue(last_timev)
     if data is None :
       raise Exception("bla")
+      continue
       
     (new_last_time,new_last_timev) =data
     print "got up to  %s %s" % (new_last_time,new_last_timev)
