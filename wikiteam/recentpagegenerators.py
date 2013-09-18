@@ -158,7 +158,7 @@ class Processor :
         #    print "\tSKIP\t",pagename,time,timeo, comment
         return (timeo,timev)
       except Exception, e:
-        pywikibot.output( e)
+        pywikibot.output(str(e))
         pywikibot.output("\tSKIP error\t",pagename,time,timeo, comment)
         return (timeo,timev)
     else:
@@ -174,6 +174,7 @@ class Processor :
         for page in gen:
           i+=1
           if isinstance(page, (list, tuple)):
+            
             data= self.process_page(page)
             if data is None:
               return None
@@ -193,8 +194,9 @@ class Processor :
         #print page
         data= self.process_page(page)
         if data is None:
-          #print "data is none for" + str(page)
-          return None
+          print "data is none"
+          #return None
+          pass
         else:
           (timeo,timev) = data
 
