@@ -159,7 +159,7 @@ class Processor :
         return (timeo,timev)
       except Exception, e:
         pywikibot.output(str(e))
-        pywikibot.output("\tSKIP error\t",pagename,time,timeo, comment)
+        pywikibot.output("\tSKIP error\t",pagename,timev,timeo, comment)
         return (timeo,timev)
     else:
       return (timeo,timev)
