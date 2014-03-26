@@ -30,30 +30,26 @@ for infile in glob.glob( os.path.join(path, '*') ):
 
         dn="enwikipediaorg_w-%s-wikidump/" % ts
         target= "./done/%s" % dn
-        if not(os.path.exists(target)):
-            cmd = "rm -rf ./%s" % pn
-
-            print cmd
-            stat = os.system(cmd)
-            print stat
-            if (stat >0) :
-                sys.exit(stat)
-
-            cmd = "rm -rf ./%s" % zn
-            print cmd
-            stat = os.system(cmd)
-            print stat
-            if (stat >0) :
-                sys.exit(stat)
-
-
-        else:
-            cmd = "rm -rf ./%s" % dn
-            print cmd
-            stat = os.system(cmd)
-            print stat
-            if (stat >0) :
-                sys.exit(stat)
+        #if not(os.path.exists(target)):
+            #cmd = "rm -rf ./%s" % pn
+            # print cmd
+            # stat = os.system(cmd)
+            # print stat
+            # if (stat >0) :
+            #     sys.exit(stat)
+            #cmd = "rm -rf ./%s" % zn
+            #print cmd
+            #stat = os.system(cmd)
+            #print stat
+            #if (stat >0) :
+            #    sys.exit(stat)
+        #else:
+            # cmd = "rm -rf ./%s" % dn
+            # print cmd
+            # stat = os.system(cmd)
+            # print stat
+            # if (stat >0) :
+            #     sys.exit(stat)
 
         
     else:
