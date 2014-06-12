@@ -939,6 +939,9 @@ class Family(family.Family):
         self.namespaces[111] = {
             'als': u'Nochricht Diskussion',
         }
+        self.namespaces[118] = {
+            'en': u'test',
+        }
 
         self.category_redirect_templates = {
             '_default': (),

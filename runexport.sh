@@ -6,4 +6,4 @@ echo going to run process
 cd ${HOME}/experiments/wikiteam/data
 #pwd
 python $HOME/experiments/wikiteam/process.py
-#rm -rf  ${HOME}/experiments/wikiteam/data/wt*
+rm -rf  ${HOME}/experiments/wikiteam/data/wt*
