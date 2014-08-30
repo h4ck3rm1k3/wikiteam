@@ -943,6 +943,13 @@ class Family(family.Family):
             'en': u'test',
         }
 
+        self.namespaces[118] = {
+            'en': u'Draft',
+        }
+        self.namespaces[119] = {
+            'en': u'Draft talk',
+        }
+
         self.category_redirect_templates = {
             '_default': (),
             'ar': (u'تحويل تصنيف',
