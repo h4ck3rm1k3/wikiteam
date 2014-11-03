@@ -42,29 +42,30 @@ import urllib2
 import os
 from shove import Shove
 file_store = Shove('file://mystore')
+import md5
 
 def saveName(title):
-#    an = title.encode("ascii","ignore")
-    name = urllib.unquote(title)
-#    print "storing %s" % name
-    file_store[name] = title
+    """
+    save a name
+    """
+    m = md5.new(title).digest()
+    file_store[m] = title
 
 def isNewTitle(name):
-    name = urllib.unquote(name)
-#    print "checking %s" % name
-
+    """
+    check if a name is stored (md5)
+    """
+    
+    m = md5.new(name).digest()
     try :
-        if (file_store[name] ) :
-#            print "Skipping %s" % name
+        if (file_store[m] ) :
             return 0
         else:
             return 1
     except KeyError :
-        print "not seen %s" % name 
+        print "not seen %s" % m, name
         return 1
-#    except:
-#       print "other except"
-#        return 1
+
 
 
 def truncateFilename(other={}, filename=''):

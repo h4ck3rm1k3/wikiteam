@@ -1,4 +1,4 @@
-set -e 
+#set -e 
 
 export PYTHONPATH=$HOME/experiments/wikiteam/
 cd ${HOME}/experiments/wikiteam/data
