@@ -4835,7 +4835,7 @@ def Family(fam=None, fatal=True, force=False):
         # search for family module in the 'families' subdirectory
         sys.path.append(config.datafilepath('families'))
         myfamily = __import__('%s_family' % fam)
-    except ImportError:
+    except ImportError as e:
         if fatal:
             output(u"""\
 Error importing the %s family. This probably means the family
@@ -4845,6 +4845,7 @@ does not exist. Also check your configuration file."""
             traceback.print_stack()
             sys.exit(1)
         else:
+            print e
             raise ValueError("Family %s does not exist" % repr(fam))
 
     family = myfamily.Family()
@@ -7990,7 +7991,9 @@ sys.path.append(config.datafilepath('userinterfaces'))
 exec "import %s_interface as uiModule" % config.userinterface
 ui = uiModule.UI()
 verbose = 0
+#verbose = 99
 debug = False
+#debug = True
 simulate = False
 
 # TEST for bug #3081100

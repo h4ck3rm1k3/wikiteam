@@ -136,21 +136,14 @@ def getNamespaces(config={}):
 def getSDTitles(site):
     titles = []
     for x in (        
-            'Declined_AfC_submissions',
-            "Proposed_deletion",
-            "Expired_proposed_deletions",
-            'Candidates_for_speedy_deletion_as_hoaxes',
-            'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',
-            'Candidates_for_speedy_deletion_as_lacking_context',
-            'Candidates for speedy deletion as pages previously deleted via deletion discussion',
-            'Contested candidates for speedy deletion',
-            'Speedy_deletion_candidates_with_talk_pages',
-            'Candidates_for_speedy_deletion_as_duplicating_an_existing_topic',
-            'Candidates_for_speedy_deletion_for_unspecified_reason') :
+            'Vfd',
+            "Speedy_deletion_candidates",
+
+    ) :
         cat = catlib.Category(site, x)
 #        pages = cat.articlesList(False)
         pages = cat.articlesList(recurse = True)
-#        print pages
+        print pages
         for x in pages :
 #            print x.urlname()
             n = x.urlname()
@@ -179,8 +172,7 @@ def getAfd(site):
 def getPageTitlesAPI(config={}):
     """ Uses the API to get the list of page titles """
     titles = []
-    site = pywikibot.getSite()
-    titles += getAfd(site)
+    site = pywikibot.getSite('en','wikivoyage')
     titles += getSDTitles(site)
     return titles
 
@@ -244,9 +236,6 @@ def getPageTitlesScrapper(config={}):
 
 def getPageTitles(config={}):
     """  """
-    #http://en.wikipedia.org/wiki/Special:AllPages
-    #http://archiveteam.org/index.php?title=Special:AllPages
-    #http://www.wikanda.es/wiki/Especial:Todas
     print 'Loading page titles from namespaces = %s' % (config['namespaces'] and ','.join([str(i) for i in config['namespaces']]) or 'None')
     print 'Excluding titles from namespaces = %s' % (config['exnamespaces'] and ','.join([str(i) for i in config['exnamespaces']]) or 'None')
     
@@ -411,6 +400,7 @@ def getXMLPage(config={}, title='', verbose=True):
 
 
 def parseAfdName(title):
+    #TODO we wont need this for wikivoyage
     ret=0
     # now, let check if this is an Afd, and extract the page name
     if re.search('Wikipedia.Articles.for.deletion', title):
@@ -653,7 +643,7 @@ def getParameters(params=[]):
     config = {
         'curonly': False,
         'date': datetime.datetime.now().strftime('%Y%m%d%H%M%S'),
-        'api': "http://en.wikipedia.org/w/api.php",
+        'api': "http://en.wikivoyage.org/w/api.php",
         'index': '',
         'xml': True,
         'namespaces': ['all'],
@@ -834,7 +824,7 @@ def postprocess(path): # now lets post process  the outpu
 def main(params=[]):
     """ Main function """
     welcome()
-    configfilename = 'config.txt'
+    configfilename = 'config-wikivoyage.txt'
     config, other = getParameters(params=params)
         
     print 'Analysing %s' % (config['api'] and config['api'] or config['index'])

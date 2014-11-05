@@ -56,8 +56,8 @@ def main(*args):
     for arg in pywikibot.handleArgs(*args):
         xmlfilename = arg
     print xmlfilename 
-    insite = pywikibot.getSite("en","wikipedia")
-    importsite = "speedydeletion"
+    insite = pywikibot.getSite("en","wikivoyage")
+    importsite = "wikivoyage_speedydeletion"
     outsite = pywikibot.getSite("en",importsite)
     outsite.forceLogin()
 
@@ -86,12 +86,12 @@ def main(*args):
         if  re.search("^Wikipedia:" , entry.title):
 #            pywikibot.output(u'skipping %s' % entry.title)
             continue
-#        if  re.search("^User:" , entry.title):
+        if  re.search("^User:" , entry.title):
 #            pywikibot.output(u'skipping %s' % entry.title)
-#            continue
-#        if  re.search("^User Talk:" , entry.title):
+            continue
+        if  re.search("^User Talk:" , entry.title):
 #            pywikibot.output(u'skipping %s' % entry.title)
-#            continue
+            continue
         if  re.search(".css$" , entry.title):
 #            pywikibot.output(u'skipping %s' % entry.title)
             continue
