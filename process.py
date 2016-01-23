@@ -8,7 +8,7 @@ print "starting"
 path = './'
 for infile in glob.glob( os.path.join(path, '*') ):
     print "current file is: " + infile
-    match = re.search(r'(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)',infile)
+    #match = re.search(r'(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)',infile)
     match = re.search(r'w\-(\d+)\-wiki',infile)
 #    match = re.search(r'.+(dddddddddddddd).+',infile)
 #    match = re.search(r'.+(\dddddddddddddd).+',infile)

@@ -135,9 +135,15 @@ def getNamespaces(config={}):
 
 def getSDTitles(site):
     titles = []
-    for x in (        
+    for x in (
+            'AfD_debates',
+            'Articles for deletion',
+            'Miscellaneous_pages_for_deletion',
+            'Templates_for_deletion',
+            'All articles proposed for deletion',
             'Declined_AfC_submissions',
             "Proposed_deletion",
+            "Proposed deletions needing attention",
             "Expired_proposed_deletions",
             'Candidates_for_speedy_deletion_as_hoaxes',
             'Candidates_for_speedy_deletion_as_importance_or_significance_not_asserted',

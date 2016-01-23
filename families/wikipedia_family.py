@@ -950,6 +950,17 @@ class Family(family.Family):
             'en': u'Draft talk',
         }
 
+        self.namespaces[710] = { 
+            'en': u'TimedText', 
+            'pt': u'TimedText', 
+        } 
+
+        self.namespaces[711] = { 
+            'en': u'TimedText talk', 
+            'pt': u'TimedText talk', 
+        }
+
+        
         self.category_redirect_templates = {
             '_default': (),
             'ar': (u'تحويل تصنيف',
