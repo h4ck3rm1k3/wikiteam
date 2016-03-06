@@ -83,6 +83,8 @@ def main(*args):
 #        print  file_store[entry.title] 
         title=entry.title.encode("utf8","ignore")
 
+        if  re.search("^User:" , entry.title):
+            continue
         if  re.search("^Wikipedia:" , entry.title):
 #            pywikibot.output(u'skipping %s' % entry.title)
             continue
